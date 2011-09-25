@@ -12,6 +12,14 @@ VERSION = '0.1'
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_\-]+-v(\d+)$')
 
+def setup():
+    '''Add git alias in ~/.gitconfig'''
+    path = os.path.abspath(sys.argv[0])
+    ret = subprocess.call(['git', 'config', '--global',
+                           'alias.publish', '!' + path])
+    if ret == 0:
+        print 'You can now use \'git publish\' like a built-in git command.'
+
 def tag_name(topic, number):
     '''Build a tag name from a topic name and version number'''
     return '%s-v%d' % (topic, number)
@@ -90,7 +98,9 @@ def send_email(to_list, cc_list, topic, number, base):
             shutil.rmtree(tmpdir)
 
 def main():
-    parser = optparse.OptionParser(version='%%prog %s' % VERSION)
+    parser = optparse.OptionParser(version='%%prog %s' % VERSION,
+            description='Prepare and store patch revisions as git tags.',
+            epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
     parser.add_option('-b', '--base', dest='base', default='master',
                       help='branch which this is based off [defaults to master]')
     parser.add_option('--cc', dest='cc', action='append', default=[],
@@ -101,6 +111,8 @@ def main():
                       help='do not add a message')
     parser.add_option('-m', '--message', dest='message', action='store_true',
                       help='add a message')
+    parser.add_option('--setup', dest='setup', action='store_true', default=False,
+                      help='add git alias in ~/.gitconfig')
     parser.add_option('-t', '--topic', dest='topic',
                       help='topic name [defaults to current branch name]')
     parser.add_option('--to', dest='to', action='append', default=[],
@@ -108,7 +120,9 @@ def main():
 
     options, args = parser.parse_args()
 
-    print options
+    if options.setup:
+        setup()
+        return 0
 
     if options.topic:
         topic = options.topic
