@@ -1,0 +1,11 @@
+git-publish - Easy patch submission
+
+Preparing patches for email submission is tedious and takes multiple commands.
+Revised patches need to be labelled with increasing version numbers.  Patch
+series also contain a cover letter that includes a changelog for previous
+versions of the series.
+
+git-publish prepares patches consistently and stores submitted patches for
+future reference.  It works with individual patches as well as patch series.
+No constraints are placed on your workflow, you continue to use regular
+git-branch(1) and git-checkout(1) commands.
