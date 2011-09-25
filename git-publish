@@ -6,11 +6,75 @@ import re
 import tempfile
 import shutil
 import subprocess
-import git
 
 VERSION = '0.1'
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_\-]+-v(\d+)$')
+
+# As a git alias it is helpful to be a single file script with no external
+# dependencies, so these git command-line wrappers are used instead of
+# python-git.
+
+class NoCurrentBranchError(Exception):
+    pass
+
+def _git(*args):
+    '''Run a git command and return a list of lines'''
+    cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE)
+    return cmd.communicate()[0].split(os.linesep)[:-1]
+
+def git_get_current_branch():
+    for line in _git('branch', '--no-color'):
+        if '*' in line:
+            return line.split()[1]
+    raise NoCurrentBranchError
+
+def git_get_tags(pattern=None):
+    if pattern:
+        return _git('tag', '-l', pattern)
+    else:
+        return _git('tag')
+
+def git_get_tag_message(tag):
+    message = []
+    for line in _git('show', '--raw', '--no-color', tag)[4:]:
+        if line.startswith('commit '):
+            message.pop()
+            return message
+        message.append(line)
+    raise Exception('Failed to get tag message')
+
+def git_log(revlist):
+    return _git('log', '--no-color', '--oneline', revlist)
+
+def git_tag(name, annotate=None):
+    if annotate:
+        _git('tag', '-a', '-F', annotate, name)
+    else:
+        _git('tag', name)
+
+def git_format_patch(revlist, subject_prefix=None, output_directory=None,
+                     numbered=False, cover_letter=False):
+    args = ['format-patch']
+    if subject_prefix:
+        args += ['--subject-prefix', subject_prefix]
+    if output_directory:
+        args += ['--output-directory', output_directory]
+    if numbered:
+        args += ['--numbered']
+    if cover_letter:
+        args += ['--cover-letter']
+    args += [revlist]
+    _git(*args)
+
+def git_send_email(to_list, cc_list, revlist_or_path):
+    args = ['git', 'send-email']
+    for address in to_list:
+        args += ['--to', address]
+    for address in cc_list:
+        args += ['--cc', address]
+    args += [revlist_or_path]
+    subprocess.call(args)
 
 def setup():
     '''Add git alias in ~/.gitconfig'''
@@ -27,7 +91,7 @@ def tag_name(topic, number):
 def pick_new_version(branch):
     '''Generate a patch version number given a branch name'''
     number = 0
-    for tag in git.get_tags('%s-v[0-9]*' % branch):
+    for tag in git_get_tags('%s-v[0-9]*' % branch):
         m = tag_version_re.match(tag)
         if not m:
             continue
@@ -37,7 +101,7 @@ def pick_new_version(branch):
     return number + 1
 
 def get_number_of_commits(base):
-    return len(git.log('%s..' % base))
+    return len(git_log('%s..' % base))
 
 def edit(filename):
     editor = 'vi'
@@ -50,7 +114,7 @@ def edit(filename):
 def tag(topic, number, annotate=False):
     template = ['*** SUBJECT HERE ***', '', '*** BLURB HERE ***']
     if annotate and number > 1:
-        template = git.get_tag_message(tag_name(topic, number - 1))
+        template = git_get_tag_message(tag_name(topic, number - 1))
 
     fd, tmpfile = None, None
 
@@ -60,7 +124,7 @@ def tag(topic, number, annotate=False):
             os.fdopen(fd, 'w').write(os.linesep.join(template + ['']))
             edit(tmpfile)
 
-        git.tag(tag_name(topic, number), annotate=tmpfile)
+        git_tag(tag_name(topic, number), annotate=tmpfile)
     finally:
         if tmpfile:
             os.unlink(tmpfile)
@@ -71,14 +135,14 @@ def send_email(to_list, cc_list, topic, number, base):
         prefix = 'PATCH v%d' % number
 
     numbered = get_number_of_commits(base) > 1
-    message = git.get_tag_message(tag_name(topic, number))
+    message = git_get_tag_message(tag_name(topic, number))
     cover_letter = bool(message)
     revlist = '%s..' % base
 
     try:
         tmpdir = tempfile.mkdtemp()
 
-        git.format_patch(revlist,
+        git_format_patch(revlist,
                          subject_prefix=prefix,
                          output_directory=tmpdir,
                          numbered=numbered,
@@ -92,7 +156,7 @@ def send_email(to_list, cc_list, topic, number, base):
             lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
             open(cover_letter_path, 'w').writelines(lines)
 
-        git.send_email(to_list, cc_list, tmpdir)
+        git_send_email(to_list, cc_list, tmpdir)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -127,7 +191,7 @@ def main():
     if options.topic:
         topic = options.topic
     else:
-        topic = git.get_current_branch()
+        topic = git_get_current_branch()
         if topic == 'master':
             print 'Please use a topic branch, cannot version master branch'
             return 1
