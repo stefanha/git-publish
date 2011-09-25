@@ -1,11 +1,119 @@
-git-publish - Easy patch submission
+git-publish - Prepare and store patch revisions as git tags
+
+Overview
+========
 
 Preparing patches for email submission is tedious and takes multiple commands.
-Revised patches need to be labelled with increasing version numbers.  Patch
-series also contain a cover letter that includes a changelog for previous
-versions of the series.
+Revised patches must be labelled with increasing version numbers like v2, v3,
+and so on.  Patch series start with a cover letter that contains a changelog
+describing the differences between revisions.  All these details are repetitive
+and time-consuming to manage manually.
 
-git-publish prepares patches consistently and stores submitted patches for
+git-publish prepares patches consistently and stores them as git tags for
 future reference.  It works with individual patches as well as patch series.
-No constraints are placed on your workflow, you continue to use regular
-git-branch(1) and git-checkout(1) commands.
+No constraints are placed on git workflow, both vanilla git commands and custom
+workflow scripts are compatible with git-publish.  Email sending is fully
+integrated so that publishing a new patch revision can be done in a single
+command.
+
+Installing git-publish
+======================
+
+First, put the git-publish script somewhere and make sure it has execute
+permissions:
+
+  $ mv ~/Downloads/git-publish ~/bin/
+  $ chmod u+x ~/bin/git-publish
+
+Then run git-publish in setup mode to configure the git alias:
+
+  $ ~/bin/git-publish --setup
+  You can now use 'git publish' like a built-in git command.
+
+Storing patch revisions
+=======================
+
+To store the first revision of a patch series:
+
+  $ git checkout my-feature
+  $ git publish
+
+This creates the my-feature-v1 git tag.  Running git-publish again at a later
+point will create tags with incrementing version numbers.
+
+To refer back to a previous version, simply check out that git tag.  This way a
+record is kept of each patch revision that has been published.
+
+The version number can be set manually.  This is handy when starting out with
+git-publish on branches that were previously manually versioned:
+
+  $ git checkout my-existing-feature
+  $ git publish --number 7
+
+This creates the my-existing-feature-v7 tag.
+
+By default git-publish refuses to create a revision for the 'master' branch.
+Usually one works with so-called topic branches, one branch for each feature
+under development.  Using the 'master' branch may indicate that one has
+forgotten to switch onto the intended topic branch.  It is possible to override
+the topic name and even publish on 'master':
+
+  $ git checkout branch-a
+  $ git publish --topic branch-b
+
+This creates branch-b-v1 instead of branch-a-v1 and can be used to skip the
+check for 'master'.
+
+Tag messages
+============
+
+When preparing a single patch, git-publish creates tags without messages by
+default.  It can be handy to include a tag message (or cover letter) if there
+is more than one patch in a series.  By default a tag message will be prompted
+when there are multiple patches.
+
+To insist on creating a tag message:
+
+  $ git publish --message
+
+To refrain from creating a tag message:
+
+  $ git publish --no-message
+
+git-publish detects whether the branch contains a single commit or multiple
+commits by comparing against a base branch ('master' by default).  You can
+specify the base branch like this:
+
+  $ git publish --base my-parent
+
+Most of the time 'master' works fine.
+
+Tag messages have a summary (or subject line) and a description (or blurb).
+When send email integration is used the summary is put into the cover letter
+Subject: line while the description is put into the body.
+
+When prompting for tag messages on v2, v3, or other incremental revisions, the
+previous revision's tag message is used as the starting point.  This is handy
+for updating the existing description and keeping a changelog of the difference
+between revisions.
+
+Send email integration
+======================
+
+git-publish can call git-send-email(1) after creating a git tag.  If there is a
+tag message it will be used as the cover letter.  Email can be sent like this:
+
+  $ git publish --to patches@example.org \
+                --cc alex@example.org --cc bob@example.org
+
+After the git tag has been created as usual, commits on top of the base branch
+are sent as the patch series.  The base branch defaults to 'master' and can be
+set manually with --base.
+
+The git-send-email(1) aliasesfile feature works since the email addresses are
+passed through without interpretation by git-publish.
+
+Support
+=======
+
+Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.
