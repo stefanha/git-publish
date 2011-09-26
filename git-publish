@@ -51,7 +51,7 @@ def git_tag(name, annotate=None):
     if annotate:
         _git('tag', '-a', '-F', annotate, name)
     else:
-        _git('tag', name)
+        _git('tag', '-a', '-m', '', name)
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
                      numbered=False, cover_letter=False):
