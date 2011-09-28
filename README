@@ -1,4 +1,9 @@
-git-publish - Prepare and store patch revisions as git tags
+===========
+git-publish
+===========
+---------------------------------------------
+Prepare and store patch revisions as git tags
+---------------------------------------------
 
 Overview
 ========
@@ -20,12 +25,12 @@ Installing git-publish
 ======================
 
 First, put the git-publish script somewhere and make sure it has execute
-permissions:
+permissions::
 
   $ mv ~/Downloads/git-publish ~/bin/
   $ chmod u+x ~/bin/git-publish
 
-Then run git-publish in setup mode to configure the git alias:
+Then run git-publish in setup mode to configure the git alias::
 
   $ ~/bin/git-publish --setup
   You can now use 'git publish' like a built-in git command.
@@ -33,7 +38,7 @@ Then run git-publish in setup mode to configure the git alias:
 Storing patch revisions
 =======================
 
-To store the first revision of a patch series:
+To store the first revision of a patch series::
 
   $ git checkout my-feature
   $ git publish
@@ -45,7 +50,7 @@ To refer back to a previous version, simply check out that git tag.  This way a
 record is kept of each patch revision that has been published.
 
 The version number can be set manually.  This is handy when starting out with
-git-publish on branches that were previously manually versioned:
+git-publish on branches that were previously manually versioned::
 
   $ git checkout my-existing-feature
   $ git publish --number 7
@@ -56,7 +61,7 @@ By default git-publish refuses to create a revision for the 'master' branch.
 Usually one works with so-called topic branches, one branch for each feature
 under development.  Using the 'master' branch may indicate that one has
 forgotten to switch onto the intended topic branch.  It is possible to override
-the topic name and even publish on 'master':
+the topic name and even publish on 'master'::
 
   $ git checkout branch-a
   $ git publish --topic branch-b
@@ -72,17 +77,17 @@ default.  It can be handy to include a tag message (or cover letter) if there
 is more than one patch in a series.  By default a tag message will be prompted
 when there are multiple patches.
 
-To insist on creating a tag message:
+To insist on creating a tag message::
 
   $ git publish --message
 
-To refrain from creating a tag message:
+To refrain from creating a tag message::
 
   $ git publish --no-message
 
 git-publish detects whether the branch contains a single commit or multiple
 commits by comparing against a base branch ('master' by default).  You can
-specify the base branch like this:
+specify the base branch like this::
 
   $ git publish --base my-parent
 
@@ -101,7 +106,7 @@ Send email integration
 ======================
 
 git-publish can call git-send-email(1) after creating a git tag.  If there is a
-tag message it will be used as the cover letter.  Email can be sent like this:
+tag message it will be used as the cover letter.  Email can be sent like this::
 
   $ git publish --to patches@example.org \
                 --cc alex@example.org --cc bob@example.org
