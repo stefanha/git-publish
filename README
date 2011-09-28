@@ -4,7 +4,7 @@ Overview
 ========
 
 Preparing patches for email submission is tedious and takes multiple commands.
-Revised patches must be labelled with increasing version numbers like v2, v3,
+Revised patches must be labeled with increasing version numbers like v2, v3,
 and so on.  Patch series start with a cover letter that contains a changelog
 describing the differences between revisions.  All these details are repetitive
 and time-consuming to manage manually.
