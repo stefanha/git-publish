@@ -118,6 +118,11 @@ set manually with --base.
 The git-send-email(1) aliasesfile feature works since the email addresses are
 passed through without interpretation by git-publish.
 
+Patch emails can be manually edited before being sent, these changes only
+affect outgoing emails and are not stored permanently::
+
+  $ git publish --to patches@example.org --annotate
+
 Support
 =======
 

@@ -78,12 +78,14 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path):
+def git_send_email(to_list, cc_list, revlist_or_path, annotate):
     args = ['git', 'send-email']
     for address in to_list:
         args += ['--to', address]
     for address in cc_list:
         args += ['--cc', address]
+    if annotate:
+        args += ['--annotate']
     args += [revlist_or_path]
     subprocess.call(args)
 
@@ -140,7 +142,7 @@ def tag(topic, number, annotate=False):
         if tmpfile:
             os.unlink(tmpfile)
 
-def send_email(to_list, cc_list, topic, number, base):
+def send_email(to_list, cc_list, topic, number, base, annotate):
     prefix = None
     if number > 1:
         prefix = 'PATCH v%d' % number
@@ -167,7 +169,7 @@ def send_email(to_list, cc_list, topic, number, base):
             lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
             open(cover_letter_path, 'w').writelines(lines)
 
-        git_send_email(to_list, cc_list, tmpdir)
+        git_send_email(to_list, cc_list, tmpdir, annotate)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -176,6 +178,8 @@ def main():
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
             description='Prepare and store patch revisions as git tags.',
             epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
+    parser.add_option('--annotate', dest='annotate', action='store_true',
+                      default=False, help='review and edit each patch email')
     parser.add_option('-b', '--base', dest='base', default='master',
                       help='branch which this is based off [defaults to master]')
     parser.add_option('--cc', dest='cc', action='append', default=[],
@@ -221,7 +225,8 @@ def main():
     tag(topic, number, annotate=message)
 
     if options.to:
-        send_email(options.to, options.cc, topic, number, options.base)
+        send_email(options.to, options.cc, topic, number, options.base,
+                   options.annotate)
 
     return 0
 
