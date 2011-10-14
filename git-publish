@@ -65,7 +65,7 @@ def git_tag(name, annotate=None):
         _git('tag', '-a', '-m', '', name)
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
-                     numbered=False, cover_letter=False):
+                     numbered=False, cover_letter=False, signoff=False):
     args = ['format-patch']
     if subject_prefix:
         args += ['--subject-prefix', subject_prefix]
@@ -75,6 +75,8 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
         args += ['--numbered']
     if cover_letter:
         args += ['--cover-letter']
+    if signoff:
+        args += ['--signoff']
     args += [revlist]
     _git(*args)
 
@@ -142,7 +144,7 @@ def tag(topic, number, annotate=False):
         if tmpfile:
             os.unlink(tmpfile)
 
-def send_email(to_list, cc_list, topic, number, base, annotate):
+def send_email(to_list, cc_list, topic, number, base, annotate, signoff):
     prefix = None
     if number > 1:
         prefix = 'PATCH v%d' % number
@@ -159,7 +161,8 @@ def send_email(to_list, cc_list, topic, number, base, annotate):
                          subject_prefix=prefix,
                          output_directory=tmpdir,
                          numbered=numbered,
-                         cover_letter=cover_letter)
+                         cover_letter=cover_letter,
+                         signoff=signoff)
 
         if message:
             cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
@@ -196,6 +199,9 @@ def main():
                       help='topic name [defaults to current branch name]')
     parser.add_option('--to', dest='to', action='append', default=[],
                       help='specify a primary email recipient')
+    parser.add_option('-s', '--signoff', dest='signoff', action='store_true',
+                      default=False,
+                      help='add Signed-off-by: <self> to commits when emailing')
 
     options, args = parser.parse_args()
 
