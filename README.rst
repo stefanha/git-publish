@@ -123,6 +123,11 @@ affect outgoing emails and are not stored permanently::
 
   $ git publish --to patches@example.org --annotate
 
+Signed-off-by: <self> lines can be applied to patch emails, only outgoing
+emails are affected and not the local git commits::
+
+  $ git publish --to patches@example.org --signoff
+
 Support
 =======
 
