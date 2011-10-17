@@ -236,7 +236,7 @@ def main():
 
     if options.to:
         send_email(options.to, options.cc, topic, number, options.base,
-                   options.annotate)
+                   options.annotate, options.signoff)
 
     return 0
 
