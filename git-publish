@@ -37,6 +37,14 @@ def _git(*args):
     cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE)
     return cmd.communicate()[0].split(os.linesep)[:-1]
 
+def _git_with_stderr(*args):
+    '''Run a git command and return a list of lines for stdout and stderr'''
+    if DEBUG:
+        print 'git ' + ' '.join(args)
+    cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = cmd.communicate()
+    return stdout.split(os.linesep)[:-1], stderr.split(os.linesep)[:-1]
+
 def git_get_current_branch():
     for line in _git('branch', '--no-color'):
         if '*' in line:
@@ -51,7 +59,8 @@ def git_get_tags(pattern=None):
 
 def git_get_tag_message(tag):
     message = []
-    for line in _git('show', '--raw', '--no-color', tag)[4:]:
+    # Hide stderr when tag does not exist
+    for line in _git_with_stderr('show', '--raw', '--no-color', tag)[0][4:]:
         if line.startswith('commit '):
             message.pop()
             return message
