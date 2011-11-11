@@ -19,6 +19,7 @@ import shutil
 import subprocess
 
 VERSION = '0.1+'
+DEBUG = False
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_\-]+-v(\d+)$')
 
@@ -31,6 +32,8 @@ class NoCurrentBranchError(Exception):
 
 def _git(*args):
     '''Run a git command and return a list of lines'''
+    if DEBUG:
+        print 'git ' + ' '.join(args)
     cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE)
     return cmd.communicate()[0].split(os.linesep)[:-1]
 
