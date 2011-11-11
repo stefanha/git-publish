@@ -151,11 +151,8 @@ def tag(topic, number, annotate=False):
         if tmpfile:
             os.unlink(tmpfile)
 
-def send_email(to_list, cc_list, topic, number, base, annotate, signoff):
-    prefix = None
-    if number > 1:
-        prefix = 'PATCH v%d' % number
-
+def send_email(to_list, cc_list, topic, prefix, number,
+               base, annotate, signoff):
     numbered = get_number_of_commits(base) > 1
     message = git_get_tag_message(tag_name(topic, number))
     cover_letter = bool(message)
@@ -200,6 +197,8 @@ def main():
                       help='do not add a message')
     parser.add_option('-m', '--message', dest='message', action='store_true',
                       help='add a message')
+    parser.add_option('--subject-prefix', dest='prefix', default='PATCH',
+                      help='set the email Subject: header prefix')
     parser.add_option('--setup', dest='setup', action='store_true', default=False,
                       help='add git alias in ~/.gitconfig')
     parser.add_option('-t', '--topic', dest='topic',
@@ -237,8 +236,12 @@ def main():
 
     tag(topic, number, annotate=message)
 
+    prefix = options.prefix
+    if number > 1:
+        prefix = '%s v%d' % (options.prefix, number)
+
     if options.to:
-        send_email(options.to, options.cc, topic, number, options.base,
+        send_email(options.to, options.cc, topic, prefix, number, options.base,
                    options.annotate, options.signoff)
 
     return 0
