@@ -18,7 +18,7 @@ import tempfile
 import shutil
 import subprocess
 
-VERSION = '0.2'
+VERSION = '0.2+'
 DEBUG = False
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_\-]+-v(\d+)$')
