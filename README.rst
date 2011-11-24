@@ -128,6 +128,11 @@ emails are affected and not the local git commits::
 
   $ git publish --to patches@example.org --signoff
 
+Sending [RFC] series instead of regular [PATCH] series can be done by
+customizing the Subject: line::
+
+  $ git publish --to patches@example.org --subject-prefix RFC
+
 Support
 =======
 
