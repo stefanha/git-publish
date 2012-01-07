@@ -45,6 +45,12 @@ def _git_with_stderr(*args):
     stdout, stderr = cmd.communicate()
     return stdout.split(os.linesep)[:-1], stderr.split(os.linesep)[:-1]
 
+def git_get_config(*components):
+    lines = _git('config', '.'.join(components))
+    if len(lines):
+        return lines[0]
+    return None
+
 def git_get_current_branch():
     for line in _git('branch', '--no-color'):
         if '*' in line:
@@ -196,7 +202,7 @@ def main():
             epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
     parser.add_option('--annotate', dest='annotate', action='store_true',
                       default=False, help='review and edit each patch email')
-    parser.add_option('-b', '--base', dest='base', default='master',
+    parser.add_option('-b', '--base', dest='base', default=None,
                       help='branch which this is based off [defaults to master]')
     parser.add_option('--cc', dest='cc', action='append', default=[],
                       help='specify a Cc: email recipient')
@@ -224,13 +230,23 @@ def main():
         setup()
         return 0
 
+    current_branch = git_get_current_branch()
+
     if options.topic:
         topic = options.topic
     else:
-        topic = git_get_current_branch()
+        topic = current_branch
         if topic == 'master':
             print 'Please use a topic branch, cannot version master branch'
             return 1
+
+    base = options.base
+    if not base:
+        base = git_get_config('branch', current_branch, 'gitpublishbase')
+    if not base:
+        base = git_get_config('git-publish', 'base')
+    if not base:
+        base = 'master'
 
     if options.number >= 0:
         number = options.number
@@ -239,7 +255,7 @@ def main():
 
     if options.message is None:
         # If there are several commits we probably want a cover letter
-        message = get_number_of_commits(options.base) > 1
+        message = get_number_of_commits(base) > 1
     else:
         message = options.message
 
@@ -250,7 +266,7 @@ def main():
         prefix = '%s v%d' % (options.prefix, number)
 
     if options.to:
-        send_email(options.to, options.cc, topic, prefix, number, options.base,
+        send_email(options.to, options.cc, topic, prefix, number, base,
                    options.annotate, options.signoff)
 
     return 0

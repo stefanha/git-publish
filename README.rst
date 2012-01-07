@@ -93,6 +93,13 @@ specify the base branch like this::
 
 Most of the time 'master' works fine.
 
+It is also possible to persist which base branch to use.  This is useful if you
+find yourself often specifying a base branch manually.  It can be done globally
+for all branches in a reposity or just for a specific branch::
+
+  $ git config git-publish.base origin/master # for all branches
+  $ git config branch.foo.gitpublishbase origin/master # for one branch
+
 Tag messages have a summary (or subject line) and a description (or blurb).
 When send email integration is used the summary is put into the cover letter
 Subject: line while the description is put into the body.
