@@ -105,6 +105,23 @@ To refrain from creating a tag message::
 
   $ git publish --no-message
 
+Editing tag messages without publishing
+---------------------------------------
+
+Sometimes it is useful to edit the tag message before publishing.  This can be
+used to note down changelog entries as you prepare the next version of a patch
+series.
+
+To edit the tag message without publishing::
+
+  $ git publish --edit
+
+This does not tag a new version.  Instead a -staging tag will be created and
+the tag message will be picked up when you publish next time.  For example, if
+you on branch my-feature and have already published v1 and v2, editing the tag
+message will create the tag my-feature-staging.  When you publish next time the
+my-feature-v3 tag will be created and use the tag message you staged earlier.
+
 Setting the base branch
 =======================
 
