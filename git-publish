@@ -121,8 +121,8 @@ def tag_name(topic, number):
     '''Build a tag name from a topic name and version number'''
     return '%s-v%d' % (topic, number)
 
-def pick_new_version(branch):
-    '''Generate a patch version number given a branch name'''
+def get_latest_tag_number(branch):
+    '''Find the latest tag number or 0 if no tags exist'''
     number = 0
     for tag in git_get_tags('%s-v[0-9]*' % branch):
         m = tag_version_re.match(tag)
@@ -131,7 +131,7 @@ def pick_new_version(branch):
         n = int(m.group(1))
         if n > number:
             number = n
-    return number + 1
+    return number
 
 def get_number_of_commits(base):
     return len(git_log('%s..' % base))
@@ -251,7 +251,7 @@ def main():
     if options.number >= 0:
         number = options.number
     else:
-        number = pick_new_version(topic)
+        number = get_latest_tag_number(topic) + 1
 
     if options.message is None:
         # If there are several commits we probably want a cover letter
