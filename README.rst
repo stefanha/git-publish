@@ -44,10 +44,18 @@ To store the first revision of a patch series::
   $ git publish
 
 This creates the my-feature-v1 git tag.  Running git-publish again at a later
-point will create tags with incrementing version numbers.
+point will create tags with incrementing version numbers::
+
+  my-feature-v1
+  my-feature-v2
+  my-feature-v3
+  ...
 
 To refer back to a previous version, simply check out that git tag.  This way a
 record is kept of each patch revision that has been published.
+
+Overriding the version number
+-----------------------------
 
 The version number can be set manually.  This is handy when starting out with
 git-publish on branches that were previously manually versioned::
@@ -56,6 +64,9 @@ git-publish on branches that were previously manually versioned::
   $ git publish --number 7
 
 This creates the my-existing-feature-v7 tag.
+
+Overriding the branch name
+--------------------------
 
 By default git-publish refuses to create a revision for the 'master' branch.
 Usually one works with so-called topic branches, one branch for each feature
@@ -72,6 +83,15 @@ check for 'master'.
 Tag messages
 ============
 
+Tag messages have a summary (or subject line) and a description (or blurb).
+When send email integration is used the summary is put into the cover letter
+Subject: line while the description is put into the body.
+
+When prompting for tag messages on v2, v3, or other incremental revisions, the
+previous revision's tag message is used as the starting point.  This is handy
+for updating the existing description and keeping a changelog of the difference
+between revisions.
+
 When preparing a single patch, git-publish creates tags without messages by
 default.  It can be handy to include a tag message (or cover letter) if there
 is more than one patch in a series.  By default a tag message will be prompted
@@ -84,6 +104,9 @@ To insist on creating a tag message::
 To refrain from creating a tag message::
 
   $ git publish --no-message
+
+Setting the base branch
+=======================
 
 git-publish detects whether the branch contains a single commit or multiple
 commits by comparing against a base branch ('master' by default).  You can
@@ -99,15 +122,6 @@ for all branches in a reposity or just for a specific branch::
 
   $ git config git-publish.base origin/master # for all branches
   $ git config branch.foo.gitpublishbase origin/master # for one branch
-
-Tag messages have a summary (or subject line) and a description (or blurb).
-When send email integration is used the summary is put into the cover letter
-Subject: line while the description is put into the body.
-
-When prompting for tag messages on v2, v3, or other incremental revisions, the
-previous revision's tag message is used as the starting point.  This is handy
-for updating the existing description and keeping a changelog of the difference
-between revisions.
 
 Send email integration
 ======================
