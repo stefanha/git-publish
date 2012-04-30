@@ -21,7 +21,7 @@ import subprocess
 VERSION = '0.2+'
 DEBUG = False
 
-tag_version_re = re.compile(r'^[a-zA-Z0-9_\-]+-v(\d+)$')
+tag_version_re = re.compile(r'^[a-zA-Z0-9_\-\.]+-v(\d+)$')
 
 # As a git alias it is helpful to be a single file script with no external
 # dependencies, so these git command-line wrappers are used instead of
