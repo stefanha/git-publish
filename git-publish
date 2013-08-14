@@ -70,7 +70,8 @@ def git_get_tags(pattern=None):
 def git_get_tag_message(tag):
     message = []
     # Hide stderr when tag does not exist
-    for line in _git_with_stderr('show', '--raw', '--no-color', tag)[0][4:]:
+    for line in _git_with_stderr('show', '--raw', '--no-color',
+                                 '--pretty=medium', tag)[0][4:]:
         if line.startswith('commit '):
             message.pop()
             return message
