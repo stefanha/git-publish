@@ -147,6 +147,13 @@ def invoke_hook(name, *args):
     if subprocess.call((hook_path,) + args, cwd=git_get_toplevel_dir()) != 0:
         raise GitHookError
 
+def git_push(remote, ref, force=False):
+    args = ['push']
+    if force:
+        args += ['-f']
+    args += [remote, ref]
+    _git(*args)
+
 def setup():
     '''Add git alias in ~/.gitconfig'''
     path = os.path.abspath(sys.argv[0])
