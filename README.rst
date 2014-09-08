@@ -8,18 +8,18 @@ Prepare and store patch revisions as git tags
 Overview
 ========
 
-Preparing patches for email submission is tedious and takes multiple commands.
-Revised patches must be labeled with increasing version numbers like v2, v3,
-and so on.  Patch series start with a cover letter that contains a changelog
-describing the differences between revisions.  All these details are repetitive
-and time-consuming to manage manually.
+Preparing patches and pull requests for email submission is tedious and takes
+multiple commands.  Revised patches must be labeled with increasing version
+numbers like v2, v3, and so on.  Patch series start with a cover letter that
+contains a changelog describing the differences between revisions.  All these
+details are repetitive and time-consuming to manage manually.
 
 git-publish prepares patches consistently and stores them as git tags for
 future reference.  It works with individual patches as well as patch series.
 No constraints are placed on git workflow, both vanilla git commands and custom
-workflow scripts are compatible with git-publish.  Email sending is fully
-integrated so that publishing a new patch revision can be done in a single
-command.
+workflow scripts are compatible with git-publish.  Email sending and pull
+requests are fully integrated so that publishing patches can be done in a
+single command.
 
 Installing git-publish
 ======================
@@ -175,6 +175,21 @@ Sending [RFC] series instead of regular [PATCH] series can be done by
 customizing the Subject: line::
 
   $ git publish --to patches@example.org --subject-prefix RFC
+
+Sending pull requests
+=====================
+
+git-publish can send signed pull requests.  Signed tags are pushed to a remote
+git repository that must be readable by the person who will merge the pull
+request.
+
+Ensure that the branch has a default remote repository saved::
+
+  $ git config branch.foo.remote my-public-repo
+
+Send a pull request::
+
+  $ git publish --pull-request --to patches@example.org --annotate
 
 Hooks
 =====
