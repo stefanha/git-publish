@@ -98,7 +98,7 @@ def git_get_tag_message(tag):
 def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
 
-def git_tag(name, annotate=None, force=False):
+def git_tag(name, annotate=None, force=False, sign=False):
     args = ['tag', '-a']
     if annotate:
         args += ['-F', annotate]
@@ -106,6 +106,8 @@ def git_tag(name, annotate=None, force=False):
         args += ['-m', '']
     if force:
         args += ['-f']
+    if sign:
+        args += ['-s']
     args += [name]
     _git(*args)
 
@@ -199,7 +201,7 @@ def edit(filename):
                 break
     subprocess.call([editor, filename])
 
-def tag(name, template, annotate=False, force=False):
+def tag(name, template, annotate=False, force=False, sign=False):
     '''Edit a tag message and create the tag'''
     fd, tmpfile = None, None
 
@@ -209,7 +211,7 @@ def tag(name, template, annotate=False, force=False):
             os.fdopen(fd, 'w').write(os.linesep.join(template + ['']))
             edit(tmpfile)
 
-        git_tag(name, annotate=tmpfile, force=force)
+        git_tag(name, annotate=tmpfile, force=force, sign=sign)
     finally:
         if tmpfile:
             os.unlink(tmpfile)
