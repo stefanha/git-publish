@@ -95,6 +95,9 @@ def git_get_tag_message(tag):
         message.append(line)
     return None
 
+def git_request_pull(base, remote, signed_tag):
+    return _git('request-pull', base, remote, signed_tag)
+
 def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
 
@@ -170,6 +173,10 @@ def tag_name_staging(topic):
     '''Build a staging tag name from a topic name'''
     return '%s-staging' % topic
 
+def tag_name_pull_request(topic):
+    '''Build a pull request tag name from a topic name'''
+    return '%s-pull-request' % topic
+
 def get_latest_tag_number(branch):
     '''Find the latest tag number or 0 if no tags exist'''
     number = 0
@@ -194,6 +201,23 @@ def get_latest_tag_message(topic):
         return msg
 
     return ['*** SUBJECT HERE ***', '', '*** BLURB HERE ***']
+
+def get_pull_request_message(base, remote, topic):
+    # Add a subject line
+    message = [topic.replace('_', ' ').replace('-', ' ').capitalize() + ' patches',
+               '']
+    output = git_request_pull(base, remote, tag_name_pull_request(topic))
+
+    # Chop off diffstat because git-send-email(1) will generate it
+    first_separator = True
+    for line in output:
+        message.append(line)
+        if line == '----------------------------------------------------------------':
+            if not first_separator:
+                break
+            first_separator = False
+
+    return message
 
 def get_number_of_commits(base):
     return len(git_log('%s..' % base))
@@ -223,10 +247,9 @@ def tag(name, template, annotate=False, force=False, sign=False):
         if tmpfile:
             os.unlink(tmpfile)
 
-def send_email(to_list, cc_list, topic, prefix, number,
-               base, annotate, signoff, inspect_emails):
+def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
+               inspect_emails):
     numbered = get_number_of_commits(base) > 1
-    message = git_get_tag_message(tag_name(topic, number))
     cover_letter = bool(message)
     revlist = '%s..' % base
 
@@ -296,7 +319,9 @@ def main():
                       help='do not add a message')
     parser.add_option('-m', '--message', dest='message', action='store_true',
                       help='add a message')
-    parser.add_option('--subject-prefix', dest='prefix', default='PATCH',
+    parser.add_option('--pull-request', dest='pull_request', action='store_true',
+                      default=False, help='tag and send as a pull request')
+    parser.add_option('--subject-prefix', dest='prefix', default=None,
                       help='set the email Subject: header prefix')
     parser.add_option('--setup', dest='setup', action='store_true', default=False,
                       help='add git alias in ~/.gitconfig')
@@ -313,7 +338,8 @@ def main():
     # The --edit option is for editing the cover letter without publishing a
     # new revision.  Therefore it doesn't make sense to combine it with options
     # that create new revisions.
-    if options.edit and any((options.annotate, options.number != -1, options.setup, options.to)):
+    if options.edit and any((options.annotate, options.number != -1,
+                             options.setup, options.to, options.pull_request)):
         print 'The --edit option cannot be used together with other options'
         return 1
 
@@ -341,11 +367,21 @@ def main():
 
     if options.number >= 0:
         number = options.number
+    elif options.pull_request:
+        number = 1
     else:
         number = get_latest_tag_number(topic) + 1
 
+    if options.pull_request:
+        remote = git_get_config('branch', topic, 'remote')
+        if remote is None:
+            print 'Please set git config branch.%s.remote' % topic
+            return 1
+
     if options.message is not None:
         message = options.message
+    elif options.pull_request:
+        message = False
     elif git_get_tags(tag_name_staging(topic)):
         # If there is a staged tag message, we definitely want a cover letter
         message = True
@@ -353,27 +389,43 @@ def main():
         # If there are several commits we probably want a cover letter
         message = get_number_of_commits(base) > 1
 
-    tag_message = get_latest_tag_message(topic)
-    if options.edit:
-        tag(tag_name_staging(topic), tag_message, annotate=True, force=True)
+    # Tag the tree
+    if options.pull_request:
+        tag_message = ['Pull request']
+        tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=True)
+        git_push(remote, tag_name_pull_request(topic), force=True)
     else:
-        tag(tag_name(topic, number), tag_message, annotate=message)
+        tag_message = get_latest_tag_message(topic)
+        if options.edit:
+            tag(tag_name_staging(topic), tag_message, annotate=True, force=True)
+        else:
+            tag(tag_name(topic, number), tag_message, annotate=message)
 
-    # After tagging a new revision get rid of the -staging tag, if any
-    if not options.edit:
-        git_delete_tag(tag_name_staging(topic))
+        # After tagging a new revision get rid of the -staging tag, if any
+        if not options.edit:
+            git_delete_tag(tag_name_staging(topic))
 
     prefix = options.prefix
+    if prefix is None:
+        if options.pull_request:
+            prefix = 'PULL'
+        else:
+            prefix = 'PATCH'
     if number > 1:
-        prefix = '%s v%d' % (options.prefix, number)
+        prefix = '%s v%d' % (prefix, number)
 
     if options.to:
+        if options.pull_request:
+            message = get_pull_request_message(base, remote, topic)
+        else:
+            message = git_get_tag_message(tag_name(topic, number))
+
         try:
-            send_email(options.to, options.cc, topic, prefix, number, base,
+            send_email(options.to, options.cc, prefix, base, message,
                        options.annotate, options.signoff,
                        options.inspect_emails)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
-            if message:
+            if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
             return 1
 
