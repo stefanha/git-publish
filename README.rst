@@ -171,6 +171,16 @@ customizing the Subject: line::
 
   $ git publish --to patches@example.org --subject-prefix RFC
 
+Hooks
+=====
+
+git-publish supports the githooks(5) mechanism for running user scripts at
+important points during the workflow.  The script can influence the outcome of
+the operation, for example, by rejecting a patch series that is about to be
+sent out.
+
+Available hooks include:
+
 Support
 =======
 
