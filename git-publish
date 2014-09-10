@@ -364,7 +364,8 @@ def main():
                        options.annotate, options.signoff,
                        options.inspect_emails)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
-            undo_and_stage_tag(topic, number)
+            if message:
+                undo_and_stage_tag(topic, number)
             return 1
 
     return 0
