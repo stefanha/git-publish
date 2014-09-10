@@ -181,6 +181,10 @@ sent out.
 
 Available hooks include:
 
+* pre-publish-send-email is invoked before git-send-email(1).  It takes the
+  path to the patches directory as an argument.  If the exit code is non-zero,
+  the series will not be sent.
+
 Support
 =======
 

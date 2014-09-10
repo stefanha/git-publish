@@ -234,6 +234,8 @@ def send_email(to_list, cc_list, topic, prefix, number,
             lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
             open(cover_letter_path, 'w').writelines(lines)
 
+        invoke_hook('pre-publish-send-email', tmpdir)
+
         git_send_email(to_list, cc_list, tmpdir, annotate)
     finally:
         if tmpdir:
@@ -337,7 +339,7 @@ def main():
         try:
             send_email(options.to, options.cc, topic, prefix, number, base,
                        options.annotate, options.signoff)
-        except GitSendEmailError:
+        except (GitSendEmailError, GitHookError):
             undo_and_stage_tag(topic, number)
             return 1
 
