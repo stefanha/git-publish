@@ -30,6 +30,9 @@ tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
 class NoCurrentBranchError(Exception):
     pass
 
+class GitSendEmailError(Exception):
+    pass
+
 def _git(*args):
     '''Run a git command and return a list of lines'''
     if DEBUG:
@@ -117,7 +120,8 @@ def git_send_email(to_list, cc_list, revlist_or_path, annotate):
     if annotate:
         args += ['--annotate']
     args += [revlist_or_path]
-    subprocess.call(args)
+    if subprocess.call(args) != 0:
+        raise GitSendEmailError
 
 def setup():
     '''Add git alias in ~/.gitconfig'''
@@ -218,6 +222,11 @@ def send_email(to_list, cc_list, topic, prefix, number,
         if tmpdir:
             shutil.rmtree(tmpdir)
 
+def undo_and_stage_tag(topic, number):
+    '''Rename the latest tag to a staging tag so it can be re-edited'''
+    _git('tag', tag_name_staging(topic), tag_name(topic, number))
+    _git('tag', '-d', tag_name(topic, number))
+
 def main():
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
             description='Prepare and store patch revisions as git tags.',
@@ -308,8 +317,12 @@ def main():
         prefix = '%s v%d' % (options.prefix, number)
 
     if options.to:
-        send_email(options.to, options.cc, topic, prefix, number, base,
-                   options.annotate, options.signoff)
+        try:
+            send_email(options.to, options.cc, topic, prefix, number, base,
+                       options.annotate, options.signoff)
+        except GitSendEmailError:
+            undo_and_stage_tag(topic, number)
+            return 1
 
     return 0
 
