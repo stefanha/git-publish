@@ -1,0 +1,31 @@
+#!/bin/bash
+# Check RHEL downstream patch format
+#
+# Copyright (c) 2014 Red Hat, Inc.
+#
+# This work is licensed under the MIT License.  Please see the LICENSE file or
+# http://opensource.org/licenses/MIT.
+
+set -e
+[ ! -d redhat/ ] && exit 0
+
+patch_dir=$1
+
+fail() {
+	echo "Error: $@"
+	exit 1
+}
+
+check() {
+	regexp=$1
+	errmsg=$2
+	if ! grep -q "$regexp" "$patch_dir"/0000-*.patch; then
+		fail "$errmsg"
+	fi
+}
+
+check '^Subject: \[RHE' 'missing RHEL/RHEV tag in Subject: line'
+check '^Subject: \[.* qemu-kvm.*\]' 'missing qemu-kvm/qemu-kvm-rhev tag in Subject: line'
+check '^\(Bugzilla\|BZ\): ' 'missing Bugzilla: header in cover letter'
+check '^\(Brew\|BREW\): ' 'missing Brew: header in cover letter'
+check '^Upstream: ' 'missing Upstream: header in cover letter'
