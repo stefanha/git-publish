@@ -36,6 +36,31 @@ Then run git-publish in setup mode to configure the git alias::
 
 You can now use 'git publish' like a built-in git command.
 
+Quickstart
+==========
+
+Create a "topic branch" on which to do your work (implement a new feature or fix a bug)::
+
+  $ git checkout -b add-funny-jokes
+  ...
+  $ git commit
+  ...
+  $ git commit
+
+Send a patch series via email::
+
+  $ git publish --to patches@example.org --cc maintainer@example.org
+
+Address code review comments and send a new revision::
+
+  $ git rebase -i master
+  ...
+  $ git publish --to patches@example.org --cc maintainer@example.org
+
+Refer back to older revisions::
+
+  $ git show add-funny-jokes-v1
+
 Storing patch revisions
 =======================
 
