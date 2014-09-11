@@ -33,7 +33,8 @@ permissions::
 Then run git-publish in setup mode to configure the git alias::
 
   $ ~/bin/git-publish --setup
-  You can now use 'git publish' like a built-in git command.
+
+You can now use 'git publish' like a built-in git command.
 
 Storing patch revisions
 =======================
