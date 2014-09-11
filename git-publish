@@ -20,7 +20,7 @@ import shutil
 import subprocess
 import signal
 
-VERSION = '0.2+'
+VERSION = '1.0'
 DEBUG = False
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
