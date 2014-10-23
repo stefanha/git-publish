@@ -398,6 +398,14 @@ def main():
     else:
         number = get_latest_tag_number(topic) + 1
 
+    to = options.to
+    if not to and not options.edit:
+        to = git_get_config_list('branch', topic, 'gitpublishto')
+
+    cc = options.cc
+    if not cc and not options.edit:
+        cc = git_get_config_list('branch', topic, 'gitpublishcc')
+
     if options.pull_request:
         remote = git_get_config('branch', topic, 'remote')
         if remote is None:
@@ -440,20 +448,24 @@ def main():
     if number > 1:
         prefix = '%s v%d' % (prefix, number)
 
-    if options.to:
+    if to:
         if options.pull_request:
             message = get_pull_request_message(base, remote, topic)
         else:
             message = git_get_tag_message(tag_name(topic, number))
 
         try:
-            send_email(options.to, options.cc, prefix, base, message,
+            send_email(to, cc, prefix, base, message,
                        options.annotate, options.signoff,
                        options.inspect_emails, options.suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
             return 1
+
+        # Store --to and --cc for next revision
+        git_set_config('branch', topic, 'gitpublishto', to)
+        git_set_config('branch', topic, 'gitpublishcc', cc)
 
     return 0
 
