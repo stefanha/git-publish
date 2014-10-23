@@ -137,14 +137,12 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path, annotate, suppress_cc):
+def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
     args = ['git', 'send-email']
     for address in to_list:
         args += ['--to', address]
     for address in cc_list:
         args += ['--cc', address]
-    if annotate:
-        args += ['--annotate']
     if suppress_cc:
         args += ['--suppress-cc', suppress_cc]
     args += [revlist_or_path]
@@ -274,6 +272,9 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
             lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
             open(cover_letter_path, 'w').writelines(lines)
 
+        if annotate:
+            edit(os.path.join(tmpdir, '*'))
+
         if inspect_emails:
             print 'Stopping so you can inspect the patch emails:'
             print '  cd %s' % tmpdir
@@ -291,7 +292,7 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
 
         invoke_hook('pre-publish-send-email', tmpdir)
 
-        git_send_email(to_list, cc_list, tmpdir, annotate, suppress_cc)
+        git_send_email(to_list, cc_list, tmpdir, suppress_cc)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
