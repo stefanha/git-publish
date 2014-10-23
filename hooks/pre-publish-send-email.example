@@ -19,7 +19,7 @@ fail() {
 check() {
 	regexp=$1
 	errmsg=$2
-	if ! grep -q "$regexp" "$patch_dir"/0000-*.patch; then
+	if ! grep -q "$regexp" $(ls "$patch_dir"/*.patch | head -n1); then
 		fail "$errmsg"
 	fi
 }
