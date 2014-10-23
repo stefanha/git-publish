@@ -130,7 +130,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path, annotate):
+def git_send_email(to_list, cc_list, revlist_or_path, annotate, suppress_cc):
     args = ['git', 'send-email']
     for address in to_list:
         args += ['--to', address]
@@ -138,6 +138,8 @@ def git_send_email(to_list, cc_list, revlist_or_path, annotate):
         args += ['--cc', address]
     if annotate:
         args += ['--annotate']
+    if suppress_cc:
+        args += ['--suppress-cc', suppress_cc]
     args += [revlist_or_path]
     if subprocess.call(args) != 0:
         raise GitSendEmailError
@@ -248,7 +250,7 @@ def tag(name, template, annotate=False, force=False, sign=False):
             os.unlink(tmpfile)
 
 def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
-               inspect_emails):
+               inspect_emails, suppress_cc):
     numbered = get_number_of_commits(base) > 1
     cover_letter = bool(message)
     revlist = '%s..' % base
@@ -288,7 +290,7 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
 
         invoke_hook('pre-publish-send-email', tmpdir)
 
-        git_send_email(to_list, cc_list, tmpdir, annotate)
+        git_send_email(to_list, cc_list, tmpdir, annotate, suppress_cc)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -332,6 +334,8 @@ def main():
     parser.add_option('-s', '--signoff', dest='signoff', action='store_true',
                       default=False,
                       help='add Signed-off-by: <self> to commits when emailing')
+    parser.add_option('--suppress-cc', dest='suppress_cc',
+                      help='override auto-cc when sending email (man git-send-email for details)')
 
     options, args = parser.parse_args()
 
@@ -423,7 +427,7 @@ def main():
         try:
             send_email(options.to, options.cc, prefix, base, message,
                        options.annotate, options.signoff,
-                       options.inspect_emails)
+                       options.inspect_emails, options.suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
