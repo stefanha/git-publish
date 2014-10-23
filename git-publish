@@ -62,6 +62,13 @@ def git_get_config(*components):
         return lines[0]
     return None
 
+def git_get_var(name):
+    '''Get a git-var(1)'''
+    lines = _git('var', name)
+    if len(lines):
+        return lines[0]
+    return None
+
 def git_get_current_branch():
     for line in _git('branch', '--no-color'):
         if '*' in line:
@@ -225,13 +232,7 @@ def get_number_of_commits(base):
     return len(git_log('%s..' % base))
 
 def edit(filename):
-    editor = git_get_config('core', 'editor')
-    if not editor:
-        editor = 'vi'
-        for envvar in 'VISUAL', 'EDITOR':
-            if envvar in os.environ:
-                editor = os.environ[envvar]
-                break
+    editor = git_get_var('GIT_EDITOR')
     subprocess.call([editor, filename])
 
 def tag(name, template, annotate=False, force=False, sign=False):
