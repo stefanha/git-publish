@@ -57,10 +57,30 @@ def _git_with_stderr(*args):
     return stdout.split(os.linesep)[:-1], stderr.split(os.linesep)[:-1]
 
 def git_get_config(*components):
+    '''Get a git-config(1) variable'''
     lines = _git('config', '.'.join(components))
     if len(lines):
         return lines[0]
     return None
+
+def git_get_config_list(*components):
+    '''Get a git-config(1) list variable'''
+    return _git('config', '--get-all', '.'.join(components))
+
+def git_set_config(*components):
+    '''Set a git-config(1) variable'''
+    if len(components) < 2:
+        raise TypeError('git_set_config() takes at least 2 arguments (%d given)' % len(components))
+
+    val = components[-1]
+    name = '.'.join(components[:-1])
+
+    if isinstance(val, list) or isinstance(val, tuple):
+        _git('config', '--unset-all', name)
+        for v in val:
+            _git('config', '--add', name, v)
+    else:
+        _git('config', '.'.join(components), value)
 
 def git_get_var(name):
     '''Get a git-var(1)'''
