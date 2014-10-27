@@ -184,6 +184,42 @@ def git_push(remote, ref, force=False):
     args += [remote, ref]
     _git(*args)
 
+def git_config_with_profile(*args):
+    '''Like git-config(1) except with .gitpublish added to the file lookup chain
+
+    Note that only git-config(1) read operations are supported.  Write
+    operations are not allowed since we should not modify .gitpublish.'''
+    cmd = subprocess.Popen(['git', 'config', '--includes', '--file', '/dev/stdin'] + list(args),
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+    stdout, _ = cmd.communicate(input='''
+[include]
+    path = %(gitpublish)s
+    path = %(gitconfig)s
+    path = ~/.gitconfig
+''' % dict(gitpublish=os.path.join(git_get_toplevel_dir(), '.gitpublish'),
+           gitconfig=os.environ.get('GIT_CONFIG', os.path.join(git_get_git_dir(), 'config'))))
+    return stdout.split(os.linesep)[:-1]
+
+def check_profile_exists(profile_name):
+    '''Return True if the profile exists, False otherwise'''
+    lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.%s\\.' % profile_name)
+    return bool(lines)
+
+def get_profile_var(profile_name, var_name):
+    '''Get a profile variable'''
+    option = '.'.join(['gitpublishprofile', profile_name, var_name])
+    lines = git_config_with_profile(option)
+    if len(lines):
+        return lines[0]
+    return None
+
+def get_profile_var_list(profile_name, var_name):
+    '''Get a profile list variable'''
+    option = '.'.join(['gitpublishprofile', profile_name, var_name])
+    return git_config_with_profile('--get-all', option)
+
 def setup():
     '''Add git alias in ~/.gitconfig'''
     path = os.path.abspath(sys.argv[0])
@@ -343,6 +379,8 @@ def main():
                       help='do not add a message')
     parser.add_option('-m', '--message', dest='message', action='store_true',
                       help='add a message')
+    parser.add_option('--profile', dest='profile_name', default='default',
+                      help='select default settings profile')
     parser.add_option('--pull-request', dest='pull_request', action='store_true',
                       default=False, help='tag and send as a pull request')
     parser.add_option('--subject-prefix', dest='prefix', default=None,
@@ -369,6 +407,10 @@ def main():
         print 'The --edit option cannot be used together with other options'
         return 1
 
+    if options.profile_name != 'default' and not check_profile_exists(options.profile_name):
+        print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files'
+        return 1
+
     if options.setup:
         setup()
         return 0
@@ -387,6 +429,8 @@ def main():
     if not base:
         base = git_get_config('branch', current_branch, 'gitpublishbase')
     if not base:
+        base = get_profile_var(options.profile_name, 'base')
+    if not base:
         base = git_get_config('git-publish', 'base')
     if not base:
         base = 'master'
@@ -401,13 +445,19 @@ def main():
     to = options.to
     if not to and not options.edit:
         to = git_get_config_list('branch', topic, 'gitpublishto')
+        if not to:
+            to = get_profile_var_list(options.profile_name, 'to')
 
     cc = options.cc
     if not cc and not options.edit:
         cc = git_get_config_list('branch', topic, 'gitpublishcc')
+        if not cc:
+            cc = get_profile_var_list(options.profile_name, 'cc')
 
     if options.pull_request:
         remote = git_get_config('branch', topic, 'remote')
+        if remote is None:
+            remote = get_profile_var(options.profile_name, 'remote')
         if remote is None:
             print 'Please set git config branch.%s.remote' % topic
             return 1
@@ -419,9 +469,11 @@ def main():
     elif git_get_tags(tag_name_staging(topic)):
         # If there is a staged tag message, we definitely want a cover letter
         message = True
-    else:
+    elif get_number_of_commits(base) > 1:
         # If there are several commits we probably want a cover letter
-        message = get_number_of_commits(base) > 1
+        message = True
+    else:
+        message = get_profile_var(options.profile_name, 'message') == 'true'
 
     # Tag the tree
     if options.pull_request:
@@ -441,6 +493,8 @@ def main():
 
     prefix = options.prefix
     if prefix is None:
+        prefix = get_profile_var(options.profile_name, 'prefix')
+    if prefix is None:
         if options.pull_request:
             prefix = 'PULL'
         else:
@@ -454,10 +508,14 @@ def main():
         else:
             message = git_get_tag_message(tag_name(topic, number))
 
+        suppress_cc = options.suppress_cc
+        if suppress_cc is None:
+            suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
+
         try:
             send_email(to, cc, prefix, base, message,
                        options.annotate, options.signoff,
-                       options.inspect_emails, options.suppress_cc)
+                       options.inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
