@@ -16,10 +16,15 @@ details are repetitive and time-consuming to manage manually.
 
 git-publish prepares patches consistently and stores them as git tags for
 future reference.  It works with individual patches as well as patch series.
+
 No constraints are placed on git workflow, both vanilla git commands and custom
-workflow scripts are compatible with git-publish.  Email sending and pull
-requests are fully integrated so that publishing patches can be done in a
-single command.
+workflow scripts are compatible with git-publish.
+
+Email sending and pull requests are fully integrated so that publishing patches
+can be done in a single command.
+
+Hook scripts called during patch preparation can be used to add custom format
+checking or automated test runs.
 
 Installing git-publish
 ======================
@@ -201,6 +206,56 @@ Sending [RFC] series instead of regular [PATCH] series can be done by
 customizing the Subject: line::
 
   $ git publish --to patches@example.org --subject-prefix RFC
+
+Creating profiles for frequently used projects
+==============================================
+
+Instead of providing command-line options each time a patch series is
+published, the options can be stored in git-config(1) files::
+
+  $ cat >>.git/config
+  [gitpublishprofile "example"]
+  prefix = PATCH for-example
+  to = patches@example.org
+  cc = maintainer1@example.org
+  cc = maintainer2@example.org
+  ^D
+  $ git checkout first-feature
+  $ git publish --profile example
+  $ git checkout second-feature
+  $ git publish --profile example
+
+The "example" profile is equivalent to the following command-line::
+
+  $ git publish --subject-prefix 'PATCH for-example' --to patches@example.org --cc maintainer1@example.org --cc maintainer2@example.org
+
+If command-line options are given together with a profile, then the
+command-line options take precedence.
+
+The following profile options are available::
+
+  [gitpublishprofile "example"]
+  base = v2.1.0               # same as --base
+  remote = origin             # used if branch.<branch-name>.remote not set
+  prefix = PATCH              # same as --patch
+  to = patches@example.org    # same as --to
+  cc = maintainer@example.org # same as --cc
+  suppresscc = all            # same as --suppress-cc
+  message = true              # same as --message
+
+The special "default" profile name is active when no --profile command-line
+option was given.  The default profile does not set any options but can be
+extended in git-config(1) files::
+
+  $ cat >>.git/config
+  [gitpublishprofile "default"]
+  suppresscc = all            # do not auto-cc people
+
+If a file named .gitpublish exists in the repository top-level directory, it is
+automatically searched in addition to the git-config(1) .git/config and
+~/.gitconfig files.  Since the .gitpublish file can be committed into git, this
+can be used to provide a default profile for branches that you expect to
+repeatedly use as a base for new work.
 
 Sending pull requests
 =====================
