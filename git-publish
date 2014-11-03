@@ -464,6 +464,7 @@ def main():
             print 'Please set git config branch.%s.remote' % topic
             return 1
 
+    profile_message_var = get_profile_var(options.profile_name, 'message')
     if options.message is not None:
         message = options.message
     elif options.pull_request:
@@ -471,11 +472,17 @@ def main():
     elif git_get_tags(tag_name_staging(topic)):
         # If there is a staged tag message, we definitely want a cover letter
         message = True
-    elif get_number_of_commits(base) > 1:
-        # If there are several commits we probably want a cover letter
-        message = True
+    elif profile_message_var is not None:
+        message = profile_message_var == 'true'
     else:
-        message = get_profile_var(options.profile_name, 'message') == 'true'
+        config_cover_letter = git_get_config('format', 'coverLetter')
+        if config_cover_letter == 'true':
+            message = True
+        elif config_cover_letter == 'false':
+            message = False
+        else: # treat as 'auto'
+            # If there are several commits we probably want a cover letter
+            message = get_number_of_commits(base) > 1
 
     # Tag the tree
     if options.pull_request:
