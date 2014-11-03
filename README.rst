@@ -123,10 +123,9 @@ previous revision's tag message is used as the starting point.  This is handy
 for updating the existing description and keeping a changelog of the difference
 between revisions.
 
-When preparing a single patch, git-publish creates tags without messages by
-default.  It can be handy to include a tag message (or cover letter) if there
-is more than one patch in a series.  By default a tag message will be prompted
-when there are multiple patches.
+The git-config(1) format.coverLetter value is honored.  The default 'auto'
+value adds a cover letter if there is more than 1 patch.  The cover letter can
+also be forced with 'true' or 'false'.
 
 To insist on creating a tag message::
 
