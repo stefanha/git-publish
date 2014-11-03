@@ -152,6 +152,8 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
         args += ['--numbered']
     if cover_letter:
         args += ['--cover-letter']
+    else:
+        args += ['--no-cover-letter']
     if signoff:
         args += ['--signoff']
     args += [revlist]
