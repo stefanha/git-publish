@@ -135,6 +135,9 @@ To refrain from creating a tag message::
 
   $ git publish --no-message
 
+For convenience these options are also available as --cover-letter and
+--no-cover-letter just like in git-format-patch(1).
+
 Editing tag messages without publishing
 ---------------------------------------
 
