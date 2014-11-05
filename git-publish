@@ -12,6 +12,7 @@
 # http://opensource.org/licenses/MIT.
 
 import os
+import glob
 import sys
 import optparse
 import re
@@ -287,9 +288,10 @@ def get_pull_request_message(base, remote, topic):
 def get_number_of_commits(base):
     return len(git_log('%s..' % base))
 
-def edit(filename):
-    editor = git_get_var('GIT_EDITOR')
-    subprocess.call([editor, filename])
+def edit(*filenames):
+    cmd = [git_get_var('GIT_EDITOR')]
+    cmd.extend(filenames)
+    subprocess.call(cmd)
 
 def tag(name, template, annotate=False, force=False, sign=False):
     '''Edit a tag message and create the tag'''
@@ -331,7 +333,7 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
             open(cover_letter_path, 'w').writelines(lines)
 
         if annotate:
-            edit(os.path.join(tmpdir, '*'))
+            edit(*glob.glob(os.path.join(tmpdir, '*')))
 
         if inspect_emails:
             print 'Stopping so you can inspect the patch emails:'
