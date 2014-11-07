@@ -20,6 +20,7 @@ import tempfile
 import shutil
 import subprocess
 import signal
+import email
 
 VERSION = '1.0+'
 DEBUG = False
@@ -39,8 +40,11 @@ class GitSendEmailError(Exception):
 class GitHookError(Exception):
     pass
 
-class InspectEmailsError(Exception):
+class UserCancel(Exception):
     pass
+
+def error(*msgs):
+    sys.stderr.write(*msgs)
 
 def _git(*args):
     '''Run a git command and return a list of lines'''
@@ -160,15 +164,16 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
+def git_send_email(to, cc, suppress_cc, revlist_or_path):
     args = ['git', 'send-email']
-    for address in to_list:
-        args += ['--to', address]
-    for address in cc_list:
-        args += ['--cc', address]
-    if suppress_cc:
-        args += ['--suppress-cc', suppress_cc]
+    args += ['--confirm=never', '--quiet']
     args += [revlist_or_path]
+    for t in to or []:
+        args += ['--to', t]
+    for t in cc or []:
+        args += ['--cc', t]
+    if suppress_cc:
+        args += ['--suppress_cc', suppress_cc]
     if subprocess.call(args) != 0:
         raise GitSendEmailError
 
@@ -233,7 +238,7 @@ def setup():
 
 def tag_name(topic, number):
     '''Build a tag name from a topic name and version number'''
-    return '%s-v%d' % (topic, number)
+    return 'git-publish.%s-v%d' % (topic, number)
 
 def tag_name_staging(topic):
     '''Build a staging tag name from a topic name'''
@@ -246,7 +251,7 @@ def tag_name_pull_request(topic):
 def get_latest_tag_number(branch):
     '''Find the latest tag number or 0 if no tags exist'''
     number = 0
-    for tag in git_get_tags('%s-v[0-9]*' % branch):
+    for tag in git_get_tags('git-publish.%s-v[0-9]*' % branch):
         m = tag_version_re.match(tag)
         if not m:
             continue
@@ -308,6 +313,21 @@ def tag(name, template, annotate=False, force=False, sign=False):
         if tmpfile:
             os.unlink(tmpfile)
 
+def menu_select(menu):
+    while True:
+        for k, v in menu:
+            print "[%s] %s" % (k, v)
+        a = raw_input()
+        if a not in [k for (k, v) in menu]:
+            print "Unknown command, please reselect"
+            continue
+        return a
+
+def remove_from_addr_list(l, pattern):
+    ll = [x.strip() for x in l.split(',') if len(x.strip()) > 0]
+    r = [x for x in ll if pattern not in x]
+    return r.join(',')
+
 def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
                inspect_emails, suppress_cc):
     numbered = get_number_of_commits(base) > 1
@@ -336,31 +356,34 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
             edit(*glob.glob(os.path.join(tmpdir, '*')))
 
         if inspect_emails:
-            print 'Stopping so you can inspect the patch emails:'
-            print '  cd %s' % tmpdir
+            print 'Stopping so you can inspect and edit patch emails manually:'
             print
-            print 'To resume:'
-            print '  fg'
+            files = os.listdir(tmpdir)
+            files.sort()
+            for f in files:
+                tf = open(os.path.join(tmpdir, f), 'r')
+                m = email.message_from_file(tf)
+                print m['subject']
             print
-            print 'To abort:'
-            print '  rm -rf %s' % tmpdir
-            print '  fg'
-            os.kill(0, signal.SIGSTOP)
-            if not os.path.exists(tmpdir):
-                tmpdir = '' # see finally clause
-                raise InspectEmailsError
-
+            print "To:", "\n    ".join(to_list)
+            if cc_list:
+                print "Cc:", "\n    ".join(cc_list)
+            print
+            while True:
+                a = menu_select([
+                        ('s', 'Send'),
+                        ('q', 'Quit (cancel)'),
+                    ])
+                if a == 'q':
+                    raise UserCancel
+                elif a == 's':
+                    break
         invoke_hook('pre-publish-send-email', tmpdir)
 
-        git_send_email(to_list, cc_list, tmpdir, suppress_cc)
+        git_send_email(to_list, cc_list, suppress_cc, tmpdir)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-
-def undo_and_stage_tag(topic, number):
-    '''Rename the latest tag to a staging tag so it can be re-edited'''
-    _git('tag', tag_name_staging(topic), tag_name(topic, number))
-    _git('tag', '-d', tag_name(topic, number))
 
 def main():
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
@@ -374,9 +397,8 @@ def main():
                       help='specify a Cc: email recipient')
     parser.add_option('--edit', dest='edit', action='store_true',
                       default=False, help='edit message but do not tag a new version')
-    parser.add_option('--inspect-emails', dest='inspect_emails',
-                      action='store_true', default=False,
-                      help='return to shell before sending emails')
+    parser.add_option('-i', '--inspect-email', action='store_true', default=False,
+                      help='prompt for action before sending')
     parser.add_option('-n', '--number', type='int', dest='number', default=-1,
                       help='version number [auto-generated by default]')
     parser.add_option('--no-message', '--no-cover-letter', dest='message',
@@ -493,14 +515,8 @@ def main():
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
         tag_message = get_latest_tag_message(topic)
-        if options.edit:
+        if options.edit or message:
             tag(tag_name_staging(topic), tag_message, annotate=True, force=True)
-        else:
-            tag(tag_name(topic, number), tag_message, annotate=message)
-
-        # After tagging a new revision get rid of the -staging tag, if any
-        if not options.edit:
-            git_delete_tag(tag_name_staging(topic))
 
     prefix = options.prefix
     if prefix is None:
@@ -513,28 +529,30 @@ def main():
     if number > 1:
         prefix = '%s v%d' % (prefix, number)
 
-    if to:
-        if options.pull_request:
-            message = get_pull_request_message(base, remote, topic)
-        else:
-            message = git_get_tag_message(tag_name(topic, number))
+    if not to:
+        error('Send to whom? (Use --to or configure with "to =" in profile)\n')
+        return 1
 
-        suppress_cc = options.suppress_cc
-        if suppress_cc is None:
-            suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
+    if options.pull_request:
+        message = get_pull_request_message(base, remote, topic)
+    else:
+        message = git_get_tag_message(tag_name_staging(topic))
 
-        try:
-            send_email(to, cc, prefix, base, message,
-                       options.annotate, options.signoff,
-                       options.inspect_emails, suppress_cc)
-        except (GitSendEmailError, GitHookError, InspectEmailsError):
-            if message and not options.pull_request:
-                undo_and_stage_tag(topic, number)
-            return 1
+    suppress_cc = options.suppress_cc
+    if suppress_cc is None:
+        suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
 
-        # Store --to and --cc for next revision
-        git_set_config('branch', topic, 'gitpublishto', to)
-        git_set_config('branch', topic, 'gitpublishcc', cc)
+    try:
+        send_email(to, cc, prefix, base, message,
+                   options.annotate, options.signoff,
+                   options.inspect_emails, suppress_cc)
+        tag(tag_name(topic, number), tag_name_staging(topic))
+    except (GitSendEmailError, GitHookError, UserCancel):
+        return 1
+
+    # Store --to and --cc for next revision
+    git_set_config('branch', topic, 'gitpublishto', to)
+    git_set_config('branch', topic, 'gitpublishcc', cc)
 
     return 0
 
