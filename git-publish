@@ -233,7 +233,7 @@ def setup():
 
 def tag_name(topic, number):
     '''Build a tag name from a topic name and version number'''
-    return '%s-v%d' % (topic, number)
+    return 'git-publish.%s-v%d' % (topic, number)
 
 def tag_name_staging(topic):
     '''Build a staging tag name from a topic name'''
@@ -246,7 +246,7 @@ def tag_name_pull_request(topic):
 def get_latest_tag_number(branch):
     '''Find the latest tag number or 0 if no tags exist'''
     number = 0
-    for tag in git_get_tags('%s-v[0-9]*' % branch):
+    for tag in git_get_tags('git-publish.%s-v[0-9]*' % branch):
         m = tag_version_re.match(tag)
         if not m:
             continue
