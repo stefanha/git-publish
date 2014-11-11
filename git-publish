@@ -412,7 +412,8 @@ def main():
         return 1
 
     if options.profile_name != 'default' and not check_profile_exists(options.profile_name):
-        print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files'
+        print ('Profile "%s" does not exist, please check .gitpublish or git-config(1) files'
+               % options.profile_name)
         return 1
 
     if options.setup:
