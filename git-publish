@@ -524,9 +524,14 @@ def main():
         if suppress_cc is None:
             suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
 
+        if options.signoff:
+            signoff = true
+        else:
+            signoff = get_profile_var(options.profile_name, 'signoff')
+
         try:
             send_email(to, cc, prefix, base, message,
-                       options.annotate, options.signoff,
+                       options.annotate, signoff,
                        options.inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
