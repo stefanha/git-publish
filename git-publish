@@ -529,10 +529,15 @@ def main():
         else:
             signoff = get_profile_var(options.profile_name, 'signoff')
 
+        if options.inspect_emails:
+            inspect_emails = true
+        else:
+            inspect_emails = get_profile_var(options.profile_name, 'inspect-emails')
+
         try:
             send_email(to, cc, prefix, base, message,
                        options.annotate, signoff,
-                       options.inspect_emails, suppress_cc)
+                       inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
