@@ -310,8 +310,8 @@ def tag(name, template, annotate=False, force=False, sign=False):
 
 def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
                inspect_emails, suppress_cc):
-    numbered = get_number_of_commits(base) > 1
     cover_letter = bool(message)
+    numbered = get_number_of_commits(base) > 1 or cover_letter
     revlist = '%s..' % base
 
     try:
@@ -412,7 +412,8 @@ def main():
         return 1
 
     if options.profile_name != 'default' and not check_profile_exists(options.profile_name):
-        print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files'
+        print ('Profile "%s" does not exist, please check .gitpublish or git-config(1) files'
+               % options.profile_name)
         return 1
 
     if options.setup:
@@ -523,10 +524,20 @@ def main():
         if suppress_cc is None:
             suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
 
+        if options.signoff:
+            signoff = true
+        else:
+            signoff = get_profile_var(options.profile_name, 'signoff')
+
+        if options.inspect_emails:
+            inspect_emails = true
+        else:
+            inspect_emails = get_profile_var(options.profile_name, 'inspect-emails')
+
         try:
             send_email(to, cc, prefix, base, message,
-                       options.annotate, options.signoff,
-                       options.inspect_emails, suppress_cc)
+                       options.annotate, signoff,
+                       inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             if message and not options.pull_request:
                 undo_and_stage_tag(topic, number)
