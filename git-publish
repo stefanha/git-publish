@@ -355,11 +355,6 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
         if tmpdir:
             shutil.rmtree(tmpdir)
 
-def undo_and_stage_tag(topic, number):
-    '''Rename the latest tag to a staging tag so it can be re-edited'''
-    _git('tag', tag_name_staging(topic), tag_name(topic, number))
-    _git('tag', '-d', tag_name(topic, number))
-
 def main():
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
             description='Prepare and store patch revisions as git tags.',
@@ -469,7 +464,7 @@ def main():
         message = options.message
     elif options.pull_request:
         message = False
-    elif git_get_tags(tag_name_staging(topic)):
+    elif git_get_tag_message(tag_name_staging(topic)):
         # If there is a staged tag message, we definitely want a cover letter
         message = True
     elif profile_message_var is not None:
@@ -491,14 +486,8 @@ def main():
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
         tag_message = get_latest_tag_message(topic)
-        if options.edit:
-            tag(tag_name_staging(topic), tag_message, annotate=True, force=True)
-        else:
-            tag(tag_name(topic, number), tag_message, annotate=message)
-
-        # After tagging a new revision get rid of the -staging tag, if any
-        if not options.edit:
-            git_delete_tag(tag_name_staging(topic))
+        anno = options.edit or message
+        tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
     prefix = options.prefix
     if prefix is None:
@@ -515,8 +504,7 @@ def main():
         if options.pull_request:
             message = get_pull_request_message(base, remote, topic)
         else:
-            message = git_get_tag_message(tag_name(topic, number))
-
+            message = git_get_tag_message(tag_name_staging(topic))
         suppress_cc = options.suppress_cc
         if suppress_cc is None:
             suppress_cc = get_profile_var(options.profile_name, 'suppresscc')
@@ -526,13 +514,16 @@ def main():
                        options.annotate, options.signoff,
                        options.inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
-            if message and not options.pull_request:
-                undo_and_stage_tag(topic, number)
             return 1
 
         # Store --to and --cc for next revision
         git_set_config('branch', topic, 'gitpublishto', to)
         git_set_config('branch', topic, 'gitpublishcc', cc)
+
+    if not options.pull_request:
+        # Publishing is done, stablize the tag now
+        _git("tag", tag_name(topic, number), tag_name_staging(topic))
+        git_delete_tag(tag_name_staging(topic))
 
     return 0
 
