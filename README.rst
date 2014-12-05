@@ -244,6 +244,7 @@ The following profile options are available::
   cc = maintainer@example.org # same as --cc
   suppresscc = all            # same as --suppress-cc
   message = true              # same as --message
+  signoff = true              # same as --signoff
 
 The special "default" profile name is active when no --profile command-line
 option was given.  The default profile does not set any options but can be
