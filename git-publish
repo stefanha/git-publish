@@ -548,10 +548,15 @@ def main():
         else:
             signoff = get_profile_var(options.profile_name, 'signoff')
 
+        if options.inspect_emails:
+            inspect_emails = True
+        else:
+            inspect_emails = get_profile_var(options.profile_name, 'inspect-emails')
+
         try:
             send_email(to, cc, prefix, base, message,
                        options.annotate, signoff,
-                       options.inspect_emails, suppress_cc)
+                       inspect_emails, suppress_cc)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
 
