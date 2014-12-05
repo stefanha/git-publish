@@ -44,7 +44,7 @@ class InspectEmailsError(Exception):
 def _git(*args):
     '''Run a git command and return a list of lines'''
     if DEBUG:
-        print 'git ' + ' '.join(args)
+        print 'git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args)
     cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE)
     return cmd.communicate()[0].split(os.linesep)[:-1]
 
