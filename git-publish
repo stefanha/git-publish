@@ -332,8 +332,8 @@ def parse_header(hdr):
 
 def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
                inspect_emails, suppress_cc):
-    numbered = get_number_of_commits(base) > 1
     cover_letter = bool(message)
+    numbered = get_number_of_commits(base) > 1 or cover_letter
     revlist = '%s..' % base
 
     try:
