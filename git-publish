@@ -357,7 +357,7 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
             open(cover_letter_path, 'w').writelines(lines)
 
         if annotate:
-            edit(*glob.glob(os.path.join(tmpdir, '*')))
+            edit(*sorted(glob.glob(os.path.join(tmpdir, '*'))))
 
         if inspect_emails:
             print 'Stopping so you can inspect the patch emails:'
