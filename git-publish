@@ -58,6 +58,10 @@ def _git_with_stderr(*args):
     stdout, stderr = cmd.communicate()
     return stdout.split(os.linesep)[:-1], stderr.split(os.linesep)[:-1]
 
+def bool_from_str(s):
+    '''Parse a boolean string value like true/false, yes/no, or on/off'''
+    return s.lower() in ('true', 'yes', 'on')
+
 def git_get_config(*components):
     '''Get a git-config(1) variable'''
     lines = _git('config', '.'.join(components))
@@ -504,16 +508,14 @@ def main():
         # If there is a staged tag message, we definitely want a cover letter
         message = True
     elif profile_message_var is not None:
-        message = profile_message_var == 'true'
+        message = bool_from_str(profile_message_var)
     else:
         config_cover_letter = git_get_config('format', 'coverLetter')
-        if config_cover_letter == 'true':
-            message = True
-        elif config_cover_letter == 'false':
-            message = False
-        else: # treat as 'auto'
+        if config_cover_letter is None or config_cover_letter.lower() == 'auto':
             # If there are several commits we probably want a cover letter
             message = get_number_of_commits(base) > 1
+        else:
+            message = bool_from_str(config_cover_letter)
 
     # Tag the tree
     if options.pull_request:
