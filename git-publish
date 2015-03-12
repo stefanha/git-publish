@@ -435,6 +435,8 @@ def main():
                       help='override auto-cc when sending email (man git-send-email for details)')
     parser.add_option('--forget-cc', dest='forget_cc', action='store_true',
                       default=False, help='Forget all previous CC emails')
+    parser.add_option('--override-cc', dest='override_cc', action='store_true',
+                      default=False, help='Ignore any profile or saved CC emails')
 
     options, args = parser.parse_args()
 
@@ -491,7 +493,7 @@ def main():
         git_set_config('branch', topic, 'gitpublishcc', [])
 
     cc = set(options.cc)
-    if not options.edit:
+    if not options.edit and not options.override_cc:
         cc = cc.union(git_get_config_list('branch', topic, 'gitpublishcc'))
         cc = cc.union(get_profile_var_list(options.profile_name, 'cc'))
 
@@ -570,7 +572,8 @@ def main():
 
         # Store --to and --cc for next revision
         git_set_config('branch', topic, 'gitpublishto', to)
-        git_set_config('branch', topic, 'gitpublishcc', cc)
+        if not options.override_cc:
+            git_set_config('branch', topic, 'gitpublishcc', cc)
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now

@@ -222,6 +222,13 @@ want to send a new version to both new@example.org and old@example.org::
 
   $ git-publish --cc old@example.org
 
+To temporarily ignore any CCs in the profile or saved list, and send only to
+the addresses specified on the CLI::
+
+  $ git-publish --override-cc --cc onetime@example.org --to patches@example.org
+
+CCs specified alongside --override-cc are not remembered for future revisions.
+
 Creating profiles for frequently used projects
 ==============================================
 
