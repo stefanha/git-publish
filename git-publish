@@ -433,6 +433,8 @@ def main():
                       help='add Signed-off-by: <self> to commits when emailing')
     parser.add_option('--suppress-cc', dest='suppress_cc',
                       help='override auto-cc when sending email (man git-send-email for details)')
+    parser.add_option('--forget-cc', dest='forget_cc', action='store_true',
+                      default=False, help='Forget all previous CC emails')
 
     options, args = parser.parse_args()
 
@@ -484,6 +486,9 @@ def main():
         to = git_get_config_list('branch', topic, 'gitpublishto')
         if not to:
             to = get_profile_var_list(options.profile_name, 'to')
+
+    if options.forget_cc:
+        git_set_config('branch', topic, 'gitpublishcc', [])
 
     cc = set(options.cc)
     if not options.edit:
