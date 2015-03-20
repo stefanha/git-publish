@@ -291,7 +291,7 @@ def get_number_of_commits(base):
     return len(git_log('%s..' % base))
 
 def edit(*filenames):
-    cmd = [git_get_var('GIT_EDITOR')]
+    cmd = git_get_var('GIT_EDITOR').split(" ")
     cmd.extend(filenames)
     subprocess.call(cmd)
 
