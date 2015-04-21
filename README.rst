@@ -209,6 +209,26 @@ customizing the Subject: line::
 
   $ git publish --to patches@example.org --subject-prefix RFC
 
+git-publish remembers the list of addresses CC'd on previous revisions
+of a patchset by default. To clear that internal list::
+
+  $ git publish --to patches@example.org --forget-cc --cc new@example.org
+
+In the above example, new@example.org will be saved to the internal list
+for next time.
+
+CC addresses accumulate and cascade. Following the previous example, if we
+want to send a new version to both new@example.org and old@example.org::
+
+  $ git-publish --cc old@example.org
+
+To temporarily ignore any CCs in the profile or saved list, and send only to
+the addresses specified on the CLI::
+
+  $ git-publish --override-cc --cc onetime@example.org --to patches@example.org
+
+CCs specified alongside --override-cc are not remembered for future revisions.
+
 Creating profiles for frequently used projects
 ==============================================
 
