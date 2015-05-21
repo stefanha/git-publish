@@ -610,7 +610,7 @@ def main():
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now
-            _git("tag", tag_name(topic, number), tag_name_staging(topic))
+            _git('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
             git_delete_tag(tag_name_staging(topic))
 
     return 0
