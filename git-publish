@@ -416,7 +416,7 @@ def main():
                       action='store_false', help='do not add a message')
     parser.add_option('-m', '--message', '--cover-letter', dest='message',
                       action='store_true', help='add a message')
-    parser.add_option('--profile', dest='profile_name', default='default',
+    parser.add_option('--profile', '-p', dest='profile_name', default='default',
                       help='select default settings profile')
     parser.add_option('--pull-request', dest='pull_request', action='store_true',
                       default=False, help='tag and send as a pull request')
