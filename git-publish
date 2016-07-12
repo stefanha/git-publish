@@ -180,7 +180,9 @@ def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
 
 def invoke_hook(name, *args):
     '''Run a githooks(5) script'''
-    hook_path = os.path.join(git_get_git_dir(), 'hooks', name)
+    hooks_path = git_get_config("core", "hooksPath") or \
+                    os.path.join(git_get_git_dir(), 'hooks')
+    hook_path = os.path.join(hooks_path, name)
     if not os.access(hook_path, os.X_OK):
         return
     if subprocess.call((hook_path,) + args, cwd=git_get_toplevel_dir()) != 0:
