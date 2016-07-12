@@ -525,6 +525,7 @@ def main():
         else:
             message = bool_from_str(config_cover_letter)
 
+    invoke_hook('pre-publish-tag', base)
     # Tag the tree
     if options.pull_request:
         tag_message = ['Pull request']

@@ -310,6 +310,10 @@ Available hooks include:
   path to the patches directory as an argument.  If the exit code is non-zero,
   the series will not be sent.
 
+* pre-publish-tag is invoked before doing the stage tag on current branch. It
+  gets one argument which refers to the base commit or branch. If the exit code
+  is non-zero, git-publish will abort.
+
 Support
 =======
 
