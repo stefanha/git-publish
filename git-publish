@@ -340,6 +340,16 @@ def parse_header(hdr):
         sys.stderr.write("Failed to parse email header: %s\n", hdr)
         return hdr
 
+def edit_cc_list(cc_list):
+    tmpfile = tempfile.NamedTemporaryFile(suffix='.txt')
+    tmpfile.write(os.linesep.join(cc_list))
+    tmpfile.flush()
+    edit(tmpfile.name)
+    r = []
+    for line in open(tmpfile.name, "r").readlines():
+        r += [x.strip() for x in line.split(",")]
+    return r
+
 def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
                inspect_emails, suppress_cc, in_reply_to):
     cover_letter = bool(message)
@@ -367,7 +377,7 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
         if annotate:
             edit(*sorted(glob.glob(os.path.join(tmpdir, '*'))))
 
-        if inspect_emails:
+        while inspect_emails:
             print 'Stopping so you can inspect the patch emails:'
             print '  cd %s' % tmpdir
             print
@@ -385,11 +395,18 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
                 print "In-Reply-To:", in_reply_to
             print
             a = menu_select([
+                    ('c', 'Edit Cc list in editor'),
                     ('a', 'Send all'),
                     ('q', 'Cancel (quit)'),
                 ])
             if a == 'q':
                 raise InspectEmailsError
+            elif a == 'c':
+                new_cc_list = edit_cc_list(cc_list)
+                cc_list.clear()
+                cc_list.update(new_cc_list)
+            elif a == 'a':
+                break
 
         invoke_hook('pre-publish-send-email', tmpdir)
 
