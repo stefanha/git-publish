@@ -415,7 +415,8 @@ def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
         if tmpdir:
             shutil.rmtree(tmpdir)
 
-def main():
+def parse_args():
+
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
             description='Prepare and store patch revisions as git tags.',
             epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
@@ -463,7 +464,10 @@ def main():
     parser.add_option('--in-reply-to', "-R",
                       help='specify the in-reply-to of the cover letter (or the single patch)')
 
-    options, args = parser.parse_args()
+    return parser.parse_args()
+
+def main():
+    options, args = parse_args()
 
     # The --edit option is for editing the cover letter without publishing a
     # new revision.  Therefore it doesn't make sense to combine it with options
