@@ -165,7 +165,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
+def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to):
     args = ['git', 'send-email']
     for address in to_list:
         args += ['--to', address]
@@ -173,6 +173,8 @@ def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
         args += ['--cc', address]
     if suppress_cc:
         args += ['--suppress-cc', suppress_cc]
+    if in_reply_to:
+        args += ['--in-reply-to', in_reply_to]
     args += ['--confirm=never', '--quiet']
     args += [revlist_or_path]
     if subprocess.call(args) != 0:
@@ -180,7 +182,9 @@ def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc):
 
 def invoke_hook(name, *args):
     '''Run a githooks(5) script'''
-    hook_path = os.path.join(git_get_git_dir(), 'hooks', name)
+    hooks_path = git_get_config("core", "hooksPath") or \
+                    os.path.join(git_get_git_dir(), 'hooks')
+    hook_path = os.path.join(hooks_path, name)
     if not os.access(hook_path, os.X_OK):
         return
     if subprocess.call((hook_path,) + args, cwd=git_get_toplevel_dir()) != 0:
@@ -336,63 +340,50 @@ def parse_header(hdr):
         sys.stderr.write("Failed to parse email header: %s\n", hdr)
         return hdr
 
-def send_email(to_list, cc_list, prefix, base, message, annotate, signoff,
-               inspect_emails, suppress_cc):
-    cover_letter = bool(message)
-    numbered = get_number_of_commits(base) > 1 or cover_letter
-    revlist = '%s..' % base
+def edit_cc_list(cc_list):
+    tmpfile = tempfile.NamedTemporaryFile(suffix='.txt')
+    tmpfile.write(os.linesep.join(cc_list))
+    tmpfile.flush()
+    edit(tmpfile.name)
+    r = []
+    for line in open(tmpfile.name, "r").readlines():
+        r += [x.strip() for x in line.split(",")]
+    return r
 
-    try:
-        tmpdir = tempfile.mkdtemp()
+def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
+    while True:
+        print 'Stopping so you can inspect the patch emails:'
+        print '  cd %s' % tmpdir
+        print
+        files = os.listdir(tmpdir)
+        files.sort()
+        for f in files:
+            tf = open(os.path.join(tmpdir, f), 'rb')
+            m = message_from_file(tf)
+            print parse_header(m['subject'])
+        print
+        print "To:", "\n    ".join(to_list)
+        if cc_list:
+            print "Cc:", "\n    ".join(cc_list)
+        if in_reply_to:
+            print "In-Reply-To:", in_reply_to
+        print
+        a = menu_select([
+                ('c', 'Edit Cc list in editor'),
+                ('a', 'Send all'),
+                ('q', 'Cancel (quit)'),
+            ])
+        if a == 'q':
+            raise InspectEmailsError
+        elif a == 'c':
+            new_cc_list = edit_cc_list(cc_list)
+            cc_list.clear()
+            cc_list.update(new_cc_list)
+        elif a == 'a':
+            break
 
-        git_format_patch(revlist,
-                         subject_prefix=prefix,
-                         output_directory=tmpdir,
-                         numbered=numbered,
-                         cover_letter=cover_letter,
-                         signoff=signoff)
+def parse_args():
 
-        if message:
-            cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
-            lines = open(cover_letter_path).readlines()
-            lines = [s.replace('*** SUBJECT HERE ***', message[0]) for s in lines]
-            blurb = os.linesep.join(message[2:])
-            lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
-            open(cover_letter_path, 'w').writelines(lines)
-
-        if annotate:
-            edit(*sorted(glob.glob(os.path.join(tmpdir, '*'))))
-
-        if inspect_emails:
-            print 'Stopping so you can inspect the patch emails:'
-            print '  cd %s' % tmpdir
-            print
-            files = os.listdir(tmpdir)
-            files.sort()
-            for f in files:
-                tf = open(os.path.join(tmpdir, f), 'rb')
-                m = message_from_file(tf)
-                print parse_header(m['subject'])
-            print
-            print "To:", "\n    ".join(to_list)
-            if cc_list:
-                print "Cc:", "\n    ".join(cc_list)
-            print
-            a = menu_select([
-                    ('a', 'Send all'),
-                    ('q', 'Cancel (quit)'),
-                ])
-            if a == 'q':
-                raise InspectEmailsError
-
-        invoke_hook('pre-publish-send-email', tmpdir)
-
-        git_send_email(to_list, cc_list, tmpdir, suppress_cc)
-    finally:
-        if tmpdir:
-            shutil.rmtree(tmpdir)
-
-def main():
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
             description='Prepare and store patch revisions as git tags.',
             epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
@@ -402,6 +393,8 @@ def main():
                       help='branch which this is based off [defaults to master]')
     parser.add_option('--cc', dest='cc', action='append', default=[],
                       help='specify a Cc: email recipient')
+    parser.add_option('--cc-cmd',
+                      help='specify a command to add whose output to the cc list')
     parser.add_option('--edit', dest='edit', action='store_true',
                       default=False, help='edit message but do not tag a new version')
     parser.add_option('--no-inspect-emails', dest='inspect_emails',
@@ -416,7 +409,7 @@ def main():
                       action='store_false', help='do not add a message')
     parser.add_option('-m', '--message', '--cover-letter', dest='message',
                       action='store_true', help='add a message')
-    parser.add_option('--profile', dest='profile_name', default='default',
+    parser.add_option('--profile', '-p', dest='profile_name', default='default',
                       help='select default settings profile')
     parser.add_option('--pull-request', dest='pull_request', action='store_true',
                       default=False, help='tag and send as a pull request')
@@ -437,8 +430,13 @@ def main():
                       default=False, help='Forget all previous CC emails')
     parser.add_option('--override-cc', dest='override_cc', action='store_true',
                       default=False, help='Ignore any profile or saved CC emails')
+    parser.add_option('--in-reply-to', "-R",
+                      help='specify the in-reply-to of the cover letter (or the single patch)')
 
-    options, args = parser.parse_args()
+    return parser.parse_args()
+
+def main():
+    options, args = parse_args()
 
     # The --edit option is for editing the cover letter without publishing a
     # new revision.  Therefore it doesn't make sense to combine it with options
@@ -497,6 +495,11 @@ def main():
         cc = cc.union(git_get_config_list('branch', topic, 'gitpublishcc'))
         cc = cc.union(get_profile_var_list(options.profile_name, 'cc'))
 
+    cc_cmd = options.cc_cmd
+    if not cc_cmd:
+        cc_cmd = git_get_config('branch', topic, 'gitpublishcccmd') or \
+                 get_profile_var(options.profile_name, 'cccmd')
+
     if options.pull_request:
         remote = git_get_config('branch', topic, 'remote')
         if remote is None:
@@ -523,6 +526,7 @@ def main():
         else:
             message = bool_from_str(config_cover_letter)
 
+    invoke_hook('pre-publish-tag', base)
     # Tag the tree
     if options.pull_request:
         tag_message = ['Pull request']
@@ -564,11 +568,40 @@ def main():
             inspect_emails = get_profile_var(options.profile_name, 'inspect-emails')
 
         try:
-            send_email(to, cc, prefix, base, message,
-                       options.annotate, signoff,
-                       inspect_emails, suppress_cc)
+            tmpdir = tempfile.mkdtemp()
+            numbered = get_number_of_commits(base) > 1 or message
+            git_format_patch(base + '..',
+                             subject_prefix=prefix,
+                             output_directory=tmpdir,
+                             numbered=numbered,
+                             cover_letter=message,
+                             signoff=signoff)
+            if message:
+                cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
+                lines = open(cover_letter_path).readlines()
+                lines = [s.replace('*** SUBJECT HERE ***', message[0]) for s in lines]
+                blurb = os.linesep.join(message[2:])
+                lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
+                open(cover_letter_path, 'w').writelines(lines)
+            patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
+            if options.annotate:
+                edit(*patches)
+            if cc_cmd:
+                for x in patches:
+                    output = subprocess.check_output(cc_cmd + " " + x,
+                                shell=True)
+                    cc = cc.union(output.splitlines())
+            cc.difference_update(to)
+            if inspect_emails:
+                inspect_menu(tmpdir, to, cc, options.in_reply_to)
+
+            invoke_hook('pre-publish-send-email', tmpdir)
+            git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
+        finally:
+            if tmpdir:
+                shutil.rmtree(tmpdir)
 
         # Store --to and --cc for next revision
         git_set_config('branch', topic, 'gitpublishto', to)
