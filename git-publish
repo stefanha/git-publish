@@ -502,7 +502,7 @@ def main():
 
     if options.pull_request:
         remote = git_get_config('branch', topic, 'remote')
-        if remote is None:
+        if remote is None or remote == '.':
             remote = get_profile_var(options.profile_name, 'remote')
         if remote is None:
             print 'Please set git config branch.%s.remote' % topic
