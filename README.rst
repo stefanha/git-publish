@@ -292,6 +292,16 @@ Ensure that the branch has a default remote repository saved::
 
   $ git config branch.foo.remote my-public-repo
 
+The remote must be accessible to the person receiving the pull request.
+Normally the remote URI should be git:// or https://.  If the remote is
+configured for ssh:// then git-config(1) can be supplemented with a public url
+and private pushurl.  This ensures that pull requests always use the public
+URI::
+
+  [remote "<name>"]
+  url = https://myhost.com/repo.git
+  pushurl = me@myhost.com:repo.git
+
 Send a pull request::
 
   $ git publish --pull-request --to patches@example.org --annotate
