@@ -544,7 +544,7 @@ def main():
         if options.pull_request:
             prefix = 'PULL'
         else:
-            prefix = 'PATCH'
+            prefix = git_get_config('format', 'subjectprefix') or 'PATCH'
     if number > 1:
         prefix = '%s v%d' % (prefix, number)
 
