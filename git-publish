@@ -376,6 +376,7 @@ def inspect_menu(tmpdir, to_list, cc_list, options):
         print
         a = menu_select([
                 ('c', 'Edit Cc list in editor'),
+                ('t', 'Edit To list in editor'),
                 ('a', 'Send all'),
                 ('q', 'Cancel (quit)'),
             ])
@@ -385,6 +386,10 @@ def inspect_menu(tmpdir, to_list, cc_list, options):
             new_cc_list = edit_email_list(cc_list)
             cc_list.clear()
             cc_list.update(new_cc_list)
+        elif a == 't':
+            new_to_list = edit_email_list(to_list)
+            to_list.clear()
+            to_list.update(new_to_list)
         elif a == 'a':
             break
 
@@ -494,6 +499,7 @@ def main():
         to = git_get_config_list('branch', topic, 'gitpublishto')
         if not to:
             to = get_profile_var_list(options.profile_name, 'to')
+    to = set(to)
 
     if options.forget_cc:
         git_set_config('branch', topic, 'gitpublishcc', [])
