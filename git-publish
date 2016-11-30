@@ -356,7 +356,8 @@ def git_save_email_lists(topic, to, cc, override_cc):
     if not override_cc:
         git_set_config('branch', topic, 'gitpublishcc', cc)
 
-def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
+def inspect_menu(tmpdir, to_list, cc_list, in_reply_to,
+                 topic, override_cc):
     while True:
         print 'Stopping so you can inspect the patch emails:'
         print '  cd %s' % tmpdir
@@ -375,8 +376,8 @@ def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
             print "In-Reply-To:", in_reply_to
         print
         a = menu_select([
-                ('c', 'Edit Cc list in editor'),
-                ('t', 'Edit To list in editor'),
+                ('c', 'Edit Cc list in editor (save after edit)'),
+                ('t', 'Edit To list in editor (save after edit)'),
                 ('a', 'Send all'),
                 ('q', 'Cancel (quit)'),
             ])
@@ -386,10 +387,12 @@ def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
             new_cc_list = edit_email_list(cc_list)
             cc_list.clear()
             cc_list.update(new_cc_list)
+            git_save_email_lists(topic, to_list, cc_list, override_cc)
         elif a == 't':
             new_to_list = edit_email_list(to_list)
             to_list.clear()
             to_list.update(new_to_list)
+            git_save_email_lists(topic, to_list, cc_list, override_cc)
         elif a == 'a':
             break
 
@@ -605,7 +608,8 @@ def main():
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
-                inspect_menu(tmpdir, to, cc, options.in_reply_to)
+                inspect_menu(tmpdir, to, cc, options.in_reply_to,
+                             topic, options.override_cc)
 
             invoke_hook('pre-publish-send-email', tmpdir)
             git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to)
