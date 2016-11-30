@@ -350,7 +350,7 @@ def edit_cc_list(cc_list):
         r += [x.strip() for x in line.split(",")]
     return r
 
-def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
+def inspect_menu(tmpdir, to_list, cc_list, options):
     while True:
         print 'Stopping so you can inspect the patch emails:'
         print '  cd %s' % tmpdir
@@ -365,8 +365,8 @@ def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
         print "To:", "\n    ".join(to_list)
         if cc_list:
             print "Cc:", "\n    ".join(cc_list)
-        if in_reply_to:
-            print "In-Reply-To:", in_reply_to
+        if options.in_reply_to:
+            print "In-Reply-To:", options.in_reply_to
         print
         a = menu_select([
                 ('c', 'Edit Cc list in editor'),
@@ -593,7 +593,7 @@ def main():
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
-                inspect_menu(tmpdir, to, cc, options.in_reply_to)
+                inspect_menu(tmpdir, to, cc, options)
 
             invoke_hook('pre-publish-send-email', tmpdir)
             git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to)
