@@ -340,7 +340,7 @@ def parse_header(hdr):
         sys.stderr.write("Failed to parse email header: %s\n", hdr)
         return hdr
 
-def edit_cc_list(cc_list):
+def edit_email_list(cc_list):
     tmpfile = tempfile.NamedTemporaryFile(suffix='.txt')
     tmpfile.write(os.linesep.join(cc_list))
     tmpfile.flush()
@@ -376,7 +376,7 @@ def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
         if a == 'q':
             raise InspectEmailsError
         elif a == 'c':
-            new_cc_list = edit_cc_list(cc_list)
+            new_cc_list = edit_email_list(cc_list)
             cc_list.clear()
             cc_list.update(new_cc_list)
         elif a == 'a':
