@@ -386,10 +386,12 @@ def inspect_menu(tmpdir, to_list, cc_list, options):
             new_cc_list = edit_email_list(cc_list)
             cc_list.clear()
             cc_list.update(new_cc_list)
+            git_save_email_lists(options, to_list, cc_list)
         elif a == 't':
             new_to_list = edit_email_list(to_list)
             to_list.clear()
             to_list.update(new_to_list)
+            git_save_email_lists(options, to_list, cc_list)
         elif a == 'a':
             break
 
