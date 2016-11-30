@@ -350,6 +350,12 @@ def edit_email_list(cc_list):
         r += [x.strip() for x in line.split(",")]
     return r
 
+def git_save_email_lists(topic, to, cc, override_cc):
+    # Store --to and --cc for next revision
+    git_set_config('branch', topic, 'gitpublishto', to)
+    if not override_cc:
+        git_set_config('branch', topic, 'gitpublishcc', cc)
+
 def inspect_menu(tmpdir, to_list, cc_list, in_reply_to):
     while True:
         print 'Stopping so you can inspect the patch emails:'
@@ -609,10 +615,7 @@ def main():
             if tmpdir:
                 shutil.rmtree(tmpdir)
 
-        # Store --to and --cc for next revision
-        git_set_config('branch', topic, 'gitpublishto', to)
-        if not options.override_cc:
-            git_set_config('branch', topic, 'gitpublishcc', cc)
+        git_save_email_lists(topic, to, cc, options.override_cc)
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now
