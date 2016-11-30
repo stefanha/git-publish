@@ -350,6 +350,12 @@ def edit_email_list(cc_list):
         r += [x.strip() for x in line.split(",")]
     return r
 
+def git_save_email_lists(options, to, cc):
+    # Store --to and --cc for next revision
+    git_set_config('branch', options.topic, 'gitpublishto', to)
+    if not options.override_cc:
+        git_set_config('branch', options.topic, 'gitpublishcc', cc)
+
 def inspect_menu(tmpdir, to_list, cc_list, options):
     while True:
         print 'Stopping so you can inspect the patch emails:'
@@ -463,6 +469,8 @@ def main():
         if topic == 'master':
             print 'Please use a topic branch, cannot version master branch'
             return 1
+    # update options to point to correct topic
+    options.topic = topic
 
     base = options.base
     if not base:
@@ -603,10 +611,7 @@ def main():
             if tmpdir:
                 shutil.rmtree(tmpdir)
 
-        # Store --to and --cc for next revision
-        git_set_config('branch', topic, 'gitpublishto', to)
-        if not options.override_cc:
-            git_set_config('branch', topic, 'gitpublishcc', cc)
+        git_save_email_lists(options, to, cc)
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now
