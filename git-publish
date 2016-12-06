@@ -553,6 +553,10 @@ def main():
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
     prefix = options.prefix
+    if prefix is not None:
+        git_set_config('branch', topic, 'gitpublishprefix', prefix)
+    else:
+        prefix = git_get_config('branch', topic, 'gitpublishprefix')
     if prefix is None:
         prefix = get_profile_var(options.profile_name, 'prefix')
     if prefix is None:
