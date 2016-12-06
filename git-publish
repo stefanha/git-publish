@@ -86,7 +86,7 @@ def git_set_config(*components):
         for v in val:
             _git('config', '--add', name, v)
     else:
-        _git('config', '.'.join(components), value)
+        _git('config', name, val)
 
 def git_get_var(name):
     '''Get a git-var(1)'''
