@@ -73,6 +73,9 @@ def git_get_config_list(*components):
     '''Get a git-config(1) list variable'''
     return _git('config', '--get-all', '.'.join(components))
 
+def git_unset_config(*components):
+    _git('config', '--unset-all', '.'.join(components))
+
 def git_set_config(*components):
     '''Set a git-config(1) variable'''
     if len(components) < 2:
@@ -82,7 +85,7 @@ def git_set_config(*components):
     name = '.'.join(components[:-1])
 
     if hasattr(val, '__iter__'):
-        _git('config', '--unset-all', name)
+        git_unset_config(name)
         for v in val:
             _git('config', '--add', name, v)
     else:
