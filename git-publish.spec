@@ -28,8 +28,10 @@ emails are sent.
 %autosetup
 %build
 %install
-install -Dpt %{buildroot}%{_bindir}/ git-publish
-install -Dpt %{buildroot}%{_datadir}/git-publish/hooks/ hooks/pre-publish-send-email.example
+mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_datadir}/git-publish/hooks
+install -p -m 755 git-publish %{buildroot}%{_bindir}/
+install -p -m 644 hooks/pre-publish-send-email.example %{buildroot}%{_datadir}/git-publish/hooks/
 
 %files
 %license LICENSE
