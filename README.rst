@@ -209,6 +209,15 @@ customizing the Subject: line::
 
   $ git publish --to patches@example.org --subject-prefix RFC
 
+Using this way, specified "--subject-prefix" will be stored as
+per-branch subject prefix, and will be used for the next git-publish
+as well.
+
+One can override the stored per-branch subject prefix by providing the
+--subject-prefix parameter again, or to clear it permanently, we can use::
+
+  $ git publish --clear-subject-prefix
+
 git-publish remembers the list of addresses CC'd on previous revisions
 of a patchset by default. To clear that internal list::
 
