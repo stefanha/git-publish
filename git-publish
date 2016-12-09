@@ -73,6 +73,9 @@ def git_get_config_list(*components):
     '''Get a git-config(1) list variable'''
     return _git('config', '--get-all', '.'.join(components))
 
+def git_unset_config(*components):
+    _git('config', '--unset-all', '.'.join(components))
+
 def git_set_config(*components):
     '''Set a git-config(1) variable'''
     if len(components) < 2:
@@ -82,11 +85,11 @@ def git_set_config(*components):
     name = '.'.join(components[:-1])
 
     if hasattr(val, '__iter__'):
-        _git('config', '--unset-all', name)
+        git_unset_config(name)
         for v in val:
             _git('config', '--add', name, v)
     else:
-        _git('config', '.'.join(components), value)
+        _git('config', name, val)
 
 def git_get_var(name):
     '''Get a git-var(1)'''
@@ -429,6 +432,9 @@ def parse_args():
                       default=False, help='tag and send as a pull request')
     parser.add_option('--subject-prefix', dest='prefix', default=None,
                       help='set the email Subject: header prefix')
+    parser.add_option('--clear-subject-prefix', dest='clear_prefix',
+                      action='store_true', default=False,
+                      help='clear the per-branch subject prefix')
     parser.add_option('--setup', dest='setup', action='store_true', default=False,
                       help='add git alias in ~/.gitconfig')
     parser.add_option('-t', '--topic', dest='topic',
@@ -552,7 +558,14 @@ def main():
         anno = options.edit or message
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
+    if options.clear_prefix:
+        git_unset_config('branch', topic, 'gitpublishprefix')
+
     prefix = options.prefix
+    if prefix is not None:
+        git_set_config('branch', topic, 'gitpublishprefix', prefix)
+    else:
+        prefix = git_get_config('branch', topic, 'gitpublishprefix')
     if prefix is None:
         prefix = get_profile_var(options.profile_name, 'prefix')
     if prefix is None:
