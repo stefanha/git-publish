@@ -204,6 +204,13 @@ emails are affected and not the local git commits::
 
   $ git publish --to patches@example.org --signoff
 
+git-publish supports the --dry-run option which is passed through to
+git-send-email to see what would be sent without actually sending anything::
+
+  $ git publish --to patches@example.org --dry-run
+
+The version number is not incremented if --dry-run is used.
+
 Sending [RFC] series instead of regular [PATCH] series can be done by
 customizing the Subject: line::
 
@@ -283,6 +290,9 @@ extended in git-config(1) files::
   $ cat >>.git/config
   [gitpublishprofile "default"]
   suppresscc = all            # do not auto-cc people
+
+Additionally, if the default profile is empty and no --profile command-line
+option was given, git-publish will use the first profile it finds.
 
 If a file named .gitpublish exists in the repository top-level directory, it is
 automatically searched in addition to the git-config(1) .git/config and

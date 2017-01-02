@@ -168,7 +168,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     args += [revlist]
     _git(*args)
 
-def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to):
+def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to, dry_run):
     args = ['git', 'send-email']
     for address in to_list:
         args += ['--to', address]
@@ -178,7 +178,11 @@ def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to):
         args += ['--suppress-cc', suppress_cc]
     if in_reply_to:
         args += ['--in-reply-to', in_reply_to]
-    args += ['--confirm=never', '--quiet']
+    if dry_run:
+        args += ['--dry-run']
+    else:
+        args += ['--quiet']
+    args += ['--confirm=never']
     args += [revlist_or_path]
     if subprocess.call(args) != 0:
         raise GitSendEmailError
@@ -222,6 +226,13 @@ def check_profile_exists(profile_name):
     '''Return True if the profile exists, False otherwise'''
     lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.%s\\.' % profile_name)
     return bool(lines)
+
+def get_first_profile():
+    '''Return name of the first profile, None if no profile is found'''
+    lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.*\\.')
+    if len(lines):
+        return lines[0].split(".")[1]
+    return None
 
 def get_profile_var(profile_name, var_name):
     '''Get a profile variable'''
@@ -452,6 +463,8 @@ def parse_args():
                       default=False, help='Ignore any profile or saved CC emails')
     parser.add_option('--in-reply-to', "-R",
                       help='specify the in-reply-to of the cover letter (or the single patch)')
+    parser.add_option('--dry-run', dest='dry_run', action='store_true',
+                      default=False, help='do everything except actually send the emails')
 
     return parser.parse_args()
 
@@ -466,9 +479,14 @@ def main():
         print 'The --edit option cannot be used together with other options'
         return 1
 
-    if options.profile_name != 'default' and not check_profile_exists(options.profile_name):
-        print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files' % options.profile_name
-        return 1
+    if not check_profile_exists(options.profile_name):
+        if options.profile_name == 'default':
+            first_profile = get_first_profile()
+            if first_profile:
+                options.profile_name = first_profile
+        else:
+            print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files' % options.profile_name
+            return 1
 
     if options.setup:
         setup()
@@ -625,7 +643,7 @@ def main():
                              topic, options.override_cc)
 
             invoke_hook('pre-publish-send-email', tmpdir)
-            git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to)
+            git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to, options.dry_run)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         finally:
@@ -634,7 +652,7 @@ def main():
 
         git_save_email_lists(topic, to, cc, options.override_cc)
 
-        if not options.pull_request:
+        if not options.pull_request and not options.dry_run:
             # Publishing is done, stablize the tag now
             _git('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
             git_delete_tag(tag_name_staging(topic))
