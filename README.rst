@@ -204,6 +204,13 @@ emails are affected and not the local git commits::
 
   $ git publish --to patches@example.org --signoff
 
+git-publish supports the --dry-run option which is passed through to
+git-send-email to see what would be sent without actually sending anything::
+
+  $ git publish --to patches@example.org --dry-run
+
+The version number is not incremented if --dry-run is used.
+
 Sending [RFC] series instead of regular [PATCH] series can be done by
 customizing the Subject: line::
 
