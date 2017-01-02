@@ -284,6 +284,9 @@ extended in git-config(1) files::
   [gitpublishprofile "default"]
   suppresscc = all            # do not auto-cc people
 
+Additionally, if the default profile is empty and no --profile command-line
+option was given, git-publish will use the first profile it finds.
+
 If a file named .gitpublish exists in the repository top-level directory, it is
 automatically searched in addition to the git-config(1) .git/config and
 ~/.gitconfig files.  Since the .gitpublish file can be committed into git, this
