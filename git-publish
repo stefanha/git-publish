@@ -563,7 +563,12 @@ def main():
 
     prefix = options.prefix
     if prefix is not None:
-        git_set_config('branch', topic, 'gitpublishprefix', prefix)
+        if prefix.strip() == "":
+            # when user specify empty string, clear per-branch prefix
+            git_unset_config('branch', topic, 'gitpublishprefix')
+            prefix = None
+        else:
+            git_set_config('branch', topic, 'gitpublishprefix', prefix)
     else:
         prefix = git_get_config('branch', topic, 'gitpublishprefix')
     if prefix is None:
