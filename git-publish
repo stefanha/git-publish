@@ -491,6 +491,12 @@ def main():
         print 'The --edit option cannot be used together with other options'
         return 1
 
+    # Keep this before any operations that call out to git(1) so that setup
+    # works when the current working directory is outside a git repo.
+    if options.setup:
+        setup()
+        return 0
+
     if not check_profile_exists(options.profile_name):
         if options.profile_name == 'default':
             if get_first_profile():
@@ -498,10 +504,6 @@ def main():
         else:
             print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files' % options.profile_name
             return 1
-
-    if options.setup:
-        setup()
-        return 0
 
     current_branch = git_get_current_branch()
 
