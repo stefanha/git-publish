@@ -1,5 +1,5 @@
 Name:           git-publish
-Version:        1.1
+Version:        1.2
 Release:        1%{?dist}
 Summary:        Prepare and store patch revisions as git tags
 License:        MIT
@@ -40,5 +40,10 @@ install -p -m 644 hooks/pre-publish-send-email.example %{buildroot}%{_datadir}/g
 %_datadir/git-publish/hooks/pre-publish-send-email.example
 
 %changelog
+* Wed Mar 1 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.2-1
+- Honor git-config(1) pushDefault/pushRemote options
+- Display git-send-email(1) CC list before sending
+- Fix git-publish --setup when run outside of a git repo
+
 * Fri Dec 9 2016 Stefan Hajnoczi <stefanha@gmail.com> - 1.1-1
 - git-publish 1.1

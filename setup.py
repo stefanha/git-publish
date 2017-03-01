@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 setup(name='git-publish',
-      version='1.1.0.1',
+      version='1.2.0',
       description='Patch series management tool for git',
       long_description='Prepare and store patch series as git tags',
       url='https://github.com/stefanha/git-publish/',
