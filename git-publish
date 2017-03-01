@@ -553,11 +553,15 @@ def main():
                  get_profile_var(options.profile_name, 'cccmd')
 
     if options.pull_request:
-        remote = git_get_config('branch', topic, 'remote')
+        remote = git_get_config('branch', topic, 'pushRemote')
+        if remote is None:
+            remote = git_get_config('remote', 'pushDefault')
+        if remote is None:
+            remote = git_get_config('branch', topic, 'remote')
         if remote is None or remote == '.':
             remote = get_profile_var(options.profile_name, 'remote')
         if remote is None:
-            print 'Please set git config branch.%s.remote' % topic
+            print 'Please set git config branch.%s.pushRemote or branch.%s.remote' % topic
             return 1
 
     profile_message_var = get_profile_var(options.profile_name, 'message')
