@@ -22,7 +22,7 @@ import subprocess
 import signal
 from email import message_from_file, header
 
-VERSION = '1.2'
+VERSION = '1.2+'
 DEBUG = False
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
