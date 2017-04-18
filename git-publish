@@ -439,6 +439,7 @@ def inspect_menu(tmpdir, to_list, cc_list, suppress_cc, in_reply_to,
         a = menu_select([
                 ('c', 'Edit Cc list in editor (save after edit)'),
                 ('t', 'Edit To list in editor (save after edit)'),
+                ('e', 'Edit patches in editor'),
                 ('p', 'Print final email headers (dry run)'),
                 ('a', 'Send all'),
                 ('q', 'Cancel (quit)'),
@@ -455,6 +456,8 @@ def inspect_menu(tmpdir, to_list, cc_list, suppress_cc, in_reply_to,
             to_list.clear()
             to_list.update(new_to_list)
             git_save_email_lists(topic, to_list, cc_list, override_cc)
+        elif a == 'e':
+            edit(*[os.path.join(tmpdir, x) for x in files])
         elif a == 'p':
             print '\n'.join(output)
         elif a == 'a':
