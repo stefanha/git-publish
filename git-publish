@@ -37,18 +37,33 @@ class NoCurrentBranchError(Exception):
 class GitSendEmailError(Exception):
     pass
 
+class GitError(Exception):
+    pass
+
 class GitHookError(Exception):
     pass
 
 class InspectEmailsError(Exception):
     pass
 
-def _git(*args):
-    '''Run a git command and return a list of lines'''
+def _git_check(*args):
+    '''Run a git command and return a list of lines, may raise GitError'''
     if DEBUG:
         print 'git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args)
-    cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE)
-    return cmd.communicate()[0].split(os.linesep)[:-1]
+    cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (out, err) = cmd.communicate()
+    lines = out.split(os.linesep)[:-1]
+    if cmd.returncode != 0:
+        raise GitError(err)
+    return lines
+
+def _git(*args):
+    '''Run a git command and return a list of lines, ignore errors'''
+    try:
+        return _git_check(*args)
+    except GitError:
+        # ignore git command errors
+        return []
 
 def _git_with_stderr(*args):
     '''Run a git command and return a list of lines for stdout and stderr'''
@@ -132,7 +147,7 @@ def git_get_tag_message(tag):
     return None
 
 def git_request_pull(base, remote, signed_tag):
-    return _git('request-pull', base, remote, signed_tag)
+    return _git_check('request-pull', base, remote, signed_tag)
 
 def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
@@ -148,7 +163,7 @@ def git_tag(name, annotate=None, force=False, sign=False):
     if sign:
         args += ['-s']
     args += [name]
-    _git(*args)
+    _git_check(*args)
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
                      numbered=False, cover_letter=False, signoff=False):
@@ -166,7 +181,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     if signoff:
         args += ['--signoff']
     args += [revlist]
-    _git(*args)
+    _git_check(*args)
 
 def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to, dry_run=False):
     args = ['git', 'send-email']
@@ -205,7 +220,7 @@ def git_push(remote, ref, force=False):
     if force:
         args += ['-f']
     args += [remote, ref]
-    _git(*args)
+    _git_check(*args)
 
 def git_config_with_profile(*args):
     '''Like git-config(1) except with .gitpublish added to the file lookup chain
@@ -661,7 +676,7 @@ def main():
 
             invoke_hook('pre-publish-send-email', tmpdir)
             git_send_email(to, cc, tmpdir, suppress_cc, options.in_reply_to)
-        except (GitSendEmailError, GitHookError, InspectEmailsError):
+        except (GitError, GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         finally:
             if tmpdir:
@@ -671,7 +686,7 @@ def main():
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now
-            _git('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
+            _git_check('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
             git_delete_tag(tag_name_staging(topic))
 
     return 0
