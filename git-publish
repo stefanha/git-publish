@@ -207,10 +207,20 @@ def git_send_email(to_list, cc_list, revlist_or_path, suppress_cc, in_reply_to, 
         if subprocess.call(args) != 0:
             raise GitSendEmailError
 
+GIT_HOOKDIR = None
+def git_get_hook_dir():
+    global GIT_HOOKDIR
+    if GIT_HOOKDIR is None:
+        GIT_HOOKDIR = _git('rev-parse', '--git-common-dir')[0]
+        if GIT_HOOKDIR.startswith("--git-common-dir"):
+            GIT_HOOKDIR = git_get_git_dir()
+    GIT_HOOKDIR = os.path.join(GIT_HOOKDIR, 'hooks')
+    return GIT_HOOKDIR
+
 def invoke_hook(name, *args):
     '''Run a githooks(5) script'''
     hooks_path = git_get_config("core", "hooksPath") or \
-                    os.path.join(git_get_git_dir(), 'hooks')
+                    os.path.join(git_get_hook_dir())
     hook_path = os.path.join(hooks_path, name)
     if not os.access(hook_path, os.X_OK):
         return
