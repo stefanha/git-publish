@@ -114,10 +114,7 @@ def git_get_var(name):
     return None
 
 def git_get_current_branch():
-    for line in _git('branch', '--no-color'):
-        if '*' in line:
-            return line.split()[1]
-    raise NoCurrentBranchError
+    return _git_check('symbolic-ref', '--short', 'HEAD')[0]
 
 def git_get_toplevel_dir():
     return _git('rev-parse', '--show-toplevel')[0]
