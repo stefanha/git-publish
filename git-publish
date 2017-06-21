@@ -588,7 +588,9 @@ def main():
         if remote is None or remote == '.':
             remote = get_profile_var(options.profile_name, 'remote')
         if remote is None:
-            print 'Please set git config branch.%s.pushRemote or branch.%s.remote' % topic
+            print '''Unable to determine remote repo to push.  Please set git config
+branch.%s.pushRemote, branch.%s.remote, remote.pushDefault, or
+gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name)
             return 1
 
     profile_message_var = get_profile_var(options.profile_name, 'message')
