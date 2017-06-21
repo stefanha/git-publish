@@ -243,13 +243,20 @@ def git_config_with_profile(*args):
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
+
+    # git-config(1) --includes requires absolute paths
+    gitpublish = os.path.abspath(os.path.join(git_get_toplevel_dir(), '.gitpublish'))
+    if 'GIT_CONFIG' in os.environ:
+        gitconfig = os.path.abspath(os.environ['GIT_CONFIG'])
+    else:
+        gitconfig = os.path.abspath(os.path.join(git_get_git_dir(), 'config'))
+
     stdout, _ = cmd.communicate(input='''
 [include]
-    path = %(gitpublish)s
-    path = %(gitconfig)s
+    path = %s
+    path = %s
     path = ~/.gitconfig
-''' % dict(gitpublish=os.path.join(git_get_toplevel_dir(), '.gitpublish'),
-           gitconfig=os.environ.get('GIT_CONFIG', os.path.join(git_get_git_dir(), 'config'))))
+''' % (gitpublish,  gitconfig))
     return stdout.split(os.linesep)[:-1]
 
 def check_profile_exists(profile_name):
