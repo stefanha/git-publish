@@ -31,9 +31,6 @@ tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
 # dependencies, so these git command-line wrappers are used instead of
 # python-git.
 
-class NoCurrentBranchError(Exception):
-    pass
-
 class GitSendEmailError(Exception):
     pass
 
