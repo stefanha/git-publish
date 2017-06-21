@@ -551,7 +551,7 @@ def main():
                 print 'Using defaults when a non-default profile exists. Forgot to pass --profile ?'
         else:
             print 'Profile "%s" does not exist, please check .gitpublish or git-config(1) files' % options.profile_name
-            return 1
+        return 1
 
     current_branch = git_get_current_branch()
 
