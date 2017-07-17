@@ -23,7 +23,6 @@ import signal
 from email import message_from_file, header
 
 VERSION = '1.2+'
-DEBUG = False
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
 
@@ -45,7 +44,7 @@ class InspectEmailsError(Exception):
 
 def _git_check(*args):
     '''Run a git command and return a list of lines, may raise GitError'''
-    if DEBUG:
+    if VERBOSE:
         print 'git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args)
     cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = cmd.communicate()
@@ -64,7 +63,7 @@ def _git(*args):
 
 def _git_with_stderr(*args):
     '''Run a git command and return a list of lines for stdout and stderr'''
-    if DEBUG:
+    if VERBOSE:
         print 'git ' + ' '.join(args)
     cmd = subprocess.Popen(['git'] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = cmd.communicate()
@@ -505,6 +504,9 @@ def parse_args():
                       help='add Signed-off-by: <self> to commits when emailing')
     parser.add_option('--suppress-cc', dest='suppress_cc',
                       help='override auto-cc when sending email (man git-send-email for details)')
+    parser.add_option('-v', '--verbose', dest='verbose',
+                      action='store_true', default=False,
+                      help='show executed git commands (useful for troubleshooting)')
     parser.add_option('--forget-cc', dest='forget_cc', action='store_true',
                       default=False, help='Forget all previous CC emails')
     parser.add_option('--override-cc', dest='override_cc', action='store_true',
@@ -515,7 +517,10 @@ def parse_args():
     return parser.parse_args()
 
 def main():
+    global VERBOSE
+
     options, args = parse_args()
+    VERBOSE = options.verbose
 
     # The --edit option is for editing the cover letter without publishing a
     # new revision.  Therefore it doesn't make sense to combine it with options
