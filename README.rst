@@ -238,6 +238,15 @@ the addresses specified on the CLI::
 
 CCs specified alongside --override-cc are not remembered for future revisions.
 
+  $ git publish --to patches@example.org --notes
+
+To include git-notes into a patch.
+
+One can attach notes to a commit with `git notes add <object>`. For having the
+notes "following" a commit on rebase operation, you can use
+`git config notes.rewriteRef refs/notes/commits`. For more information,
+give a look at git-notes(1).
+
 Creating profiles for frequently used projects
 ==============================================
 
@@ -275,6 +284,7 @@ The following profile options are available::
   message = true              # same as --message
   signoff = true              # same as --signoff
   inspect-emails = true       # same as --inspect-emails
+  notes = true                # same as --notes
 
 The special "default" profile name is active when no --profile command-line
 option was given.  The default profile does not set any options but can be
