@@ -167,7 +167,8 @@ def git_tag(name, annotate=None, force=False, sign=False):
     _git_check(*args)
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
-                     numbered=False, cover_letter=False, signoff=False):
+                     numbered=False, cover_letter=False, signoff=False,
+                     notes=False):
     args = ['format-patch']
     if subject_prefix:
         args += ['--subject-prefix', subject_prefix]
@@ -181,6 +182,8 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
         args += ['--no-cover-letter']
     if signoff:
         args += ['--signoff']
+    if notes:
+        args += ['--notes']
     args += [revlist]
     _git_check(*args)
 
@@ -502,6 +505,9 @@ def parse_args():
     parser.add_option('-s', '--signoff', dest='signoff', action='store_true',
                       default=False,
                       help='add Signed-off-by: <self> to commits when emailing')
+    parser.add_option('--notes', dest='notes', action='store_true',
+                      default=False,
+                      help='Append the notes (see git-notes(1)) for the commit after the three-dash line.')
     parser.add_option('--suppress-cc', dest='suppress_cc',
                       help='override auto-cc when sending email (man git-send-email for details)')
     parser.add_option('-v', '--verbose', dest='verbose',
@@ -671,6 +677,11 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name)
         else:
             inspect_emails = get_profile_var(options.profile_name, 'inspect-emails')
 
+        if options.notes:
+            notes = True
+        else:
+            notes = get_profile_var(options.profile_name, 'notes')
+
         try:
             tmpdir = tempfile.mkdtemp()
             numbered = get_number_of_commits(base) > 1 or message
@@ -679,7 +690,8 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name)
                              output_directory=tmpdir,
                              numbered=numbered,
                              cover_letter=message,
-                             signoff=signoff)
+                             signoff=signoff,
+                             notes=notes)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
                 lines = open(cover_letter_path).readlines()
