@@ -1,5 +1,5 @@
 Name:           git-publish
-Version:        1.2
+Version:        1.3
 Release:        1%{?dist}
 Summary:        Prepare and store patch revisions as git tags
 License:        MIT
@@ -40,6 +40,15 @@ install -p -m 644 hooks/pre-publish-send-email.example %{buildroot}%{_datadir}/g
 %_datadir/git-publish/hooks/pre-publish-send-email.example
 
 %changelog
+* Mon Aug 21 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.3-1
+- Add 'e' menu command to edit patches
+- Add --notes options for git-notes(1) users
+- Replace DEBUG with -v/--verbose option
+- Fix git_config_with_profile() profile variable lookup
+- Fix --pull-request error when remote cannot be determined
+- Support worktrees when invoking hooks
+- Improve git error handling
+
 * Wed Mar 1 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.2-1
 - Honor git-config(1) pushDefault/pushRemote options
 - Display git-send-email(1) CC list before sending
