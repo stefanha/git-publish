@@ -277,6 +277,7 @@ The following profile options are available::
   [gitpublishprofile "example"]
   base = v2.1.0               # same as --base
   remote = origin             # used if branch.<branch-name>.remote not set
+  pushremote = origin         # Overrides git settings as default push target
   prefix = PATCH              # same as --patch
   to = patches@example.org    # same as --to
   cc = maintainer@example.org # same as --cc

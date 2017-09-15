@@ -626,7 +626,9 @@ def main():
                  get_profile_var(options.profile_name, 'cccmd')
 
     if options.pull_request:
-        remote = git_get_push_remote(topic)
+        remote = get_profile_var(options.profile_name, 'pushremote')
+        if remote is None:
+            remote = git_get_push_remote(topic)
         if remote is None or remote == '.':
             remote = git_get_push_remote_approx(topic)
         if remote is None or remote == '.':
