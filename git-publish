@@ -147,6 +147,16 @@ def git_get_tag_message(tag):
         message.append(line)
     return None
 
+def git_get_push_remote_approx(topic = None):
+    if topic is None:
+        topic = git_get_current_branch()
+    remote = git_get_config('branch', topic, 'pushRemote')
+    if remote is None:
+        remote = git_get_config('remote', 'pushDefault')
+    if remote is None:
+        remote = git_get_config('branch', topic, 'remote')
+    return remote
+
 def git_request_pull(base, remote, signed_tag):
     return _git_check('request-pull', base, remote, signed_tag)
 
@@ -601,11 +611,7 @@ def main():
                  get_profile_var(options.profile_name, 'cccmd')
 
     if options.pull_request:
-        remote = git_get_config('branch', topic, 'pushRemote')
-        if remote is None:
-            remote = git_get_config('remote', 'pushDefault')
-        if remote is None:
-            remote = git_get_config('branch', topic, 'remote')
+        remote = git_get_push_remote_approx(topic)
         if remote is None or remote == '.':
             remote = get_profile_var(options.profile_name, 'remote')
         if remote is None:
