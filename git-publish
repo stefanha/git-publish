@@ -715,6 +715,18 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name)
                              options.in_reply_to, topic, options.override_cc)
 
             invoke_hook('pre-publish-send-email', tmpdir)
+
+            final_patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
+            if final_patches != patches:
+                added = set(final_patches).difference(set(patches))
+                deleted = set(patches).difference(set(final_patches))
+                print "The list of files in %s changed and I don't know what to do" % tmpdir
+                if added:
+                    print 'Added files: %s' % ' '.join(added)
+                if deleted:
+                    print 'Deleted files: %s' % ' '.join(deleted)
+                return 1
+
             git_send_email(to, cc, patches, suppress_cc, options.in_reply_to)
         except (GitError, GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
