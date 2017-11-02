@@ -25,6 +25,13 @@ emails are sent.
 
 %prep
 %autosetup
+
+# Force Python 3 in Fedora
+# https://fedoraproject.org/wiki/Packaging:Python#Multiple_Python_Runtimes
+%if 0%{?fedora}
+sed -i '1c #!/usr/bin/python3' git-publish
+%endif
+
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/git-publish/hooks
