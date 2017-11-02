@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Prepare and store patch revisions as git tags
 License:        MIT
 URL:            https://github.com/stefanha/git-publish
-Source0:        https://github.com/stefanha/git-publish/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 Requires:       python2 >= 2.7
 Requires:       git-core
