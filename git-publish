@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
 #
 # git-publish - Prepare and store patch revisions as git tags
 #
