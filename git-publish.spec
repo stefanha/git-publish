@@ -6,7 +6,6 @@ License:        MIT
 URL:            https://github.com/stefanha/git-publish
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
-Requires:       python2 >= 2.7
 Requires:       git-core
 
 %description
