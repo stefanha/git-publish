@@ -213,10 +213,10 @@ GIT_HOOKDIR = None
 def git_get_hook_dir():
     global GIT_HOOKDIR
     if GIT_HOOKDIR is None:
-        GIT_HOOKDIR = _git('rev-parse', '--git-common-dir')[0]
-        if GIT_HOOKDIR.startswith("--git-common-dir"):
-            GIT_HOOKDIR = git_get_git_dir()
-    GIT_HOOKDIR = os.path.join(GIT_HOOKDIR, 'hooks')
+        common_dir = _git('rev-parse', '--git-common-dir')[0]
+        if common_dir.startswith("--git-common-dir"):
+            common_dir = git_get_git_dir()
+        GIT_HOOKDIR = os.path.join(common_dir, 'hooks')
     return GIT_HOOKDIR
 
 def invoke_hook(name, *args):
