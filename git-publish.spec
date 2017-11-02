@@ -25,7 +25,6 @@ emails are sent.
 
 %prep
 %autosetup
-%build
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/git-publish/hooks
