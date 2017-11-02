@@ -1,5 +1,5 @@
 Name:           git-publish
-Version:        1.3
+Version:        1.4
 Release:        1%{?dist}
 Summary:        Prepare and store patch revisions as git tags
 License:        MIT
@@ -45,6 +45,11 @@ install -p -m 644 hooks/pre-publish-send-email.example %{buildroot}%{_datadir}/g
 %_datadir/git-publish/hooks/pre-publish-send-email.example
 
 %changelog
+* Thu Nov 2 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.4-1
+- Python 3 support
+- Report unexpected changes to temporary directory
+- Fix broken hooks path function
+
 * Mon Aug 21 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.3-1
 - Add 'e' menu command to edit patches
 - Add --notes options for git-notes(1) users
