@@ -383,7 +383,7 @@ def menu_select(menu):
     while True:
         for k, v in menu:
             print("[%s] %s" % (k, v))
-        a = raw_input()
+        a = sys.stdin.readline().strip()
         if a not in [k for (k, v) in menu]:
             print("Unknown command, please retry")
             continue
