@@ -44,19 +44,24 @@ class GitHookError(Exception):
 class InspectEmailsError(Exception):
     pass
 
+def popen_lines(cmd, **kwargs):
+    '''Communicate with a Popen object and return a list of lines for stdout and stderr'''
+    stdout, stderr = cmd.communicate(**kwargs)
+    stdout = stdout.decode('utf-8').split(os.linesep)[:-1]
+    stderr = stderr.decode('utf-8').split(os.linesep)[:-1]
+    return stdout, stderr
+
 def _git_check(*args):
     '''Run a git command and return a list of lines, may raise GitError'''
     if VERBOSE:
         print('git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args))
     cmd = subprocess.Popen(['git'] + list(args),
                            stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           universal_newlines=True)
-    (out, err) = cmd.communicate()
-    lines = out.split('\n')[:-1]
+                           stderr=subprocess.PIPE)
+    stdout, stderr = popen_lines(cmd)
     if cmd.returncode != 0:
-        raise GitError(err)
-    return lines
+        raise GitError('\n'.join(stderr))
+    return stdout
 
 def _git(*args):
     '''Run a git command and return a list of lines, ignore errors'''
@@ -74,8 +79,7 @@ def _git_with_stderr(*args):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
                            universal_newlines=True)
-    stdout, stderr = cmd.communicate()
-    return stdout.split('\n')[:-1], stderr.split('\n')[:-1]
+    return popen_lines(cmd)
 
 def bool_from_str(s):
     '''Parse a boolean string value like true/false, yes/no, or on/off'''
@@ -252,8 +256,7 @@ def git_config_with_profile(*args):
     cmd = subprocess.Popen(['git', 'config', '--includes', '--file', '/dev/stdin'] + list(args),
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           universal_newlines=True)
+                           stderr=subprocess.PIPE)
 
     # git-config(1) --includes requires absolute paths
     gitpublish = os.path.abspath(os.path.join(git_get_toplevel_dir(), '.gitpublish'))
@@ -262,13 +265,13 @@ def git_config_with_profile(*args):
     else:
         gitconfig = os.path.abspath(os.path.join(git_get_git_dir(), 'config'))
 
-    stdout, _ = cmd.communicate(input='''
+    stdout, _ = popen_lines(cmd, input='''
 [include]
     path = %s
     path = %s
     path = ~/.gitconfig
 ''' % (gitpublish,  gitconfig))
-    return stdout.split('\n')[:-1]
+    return stdout
 
 def check_profile_exists(profile_name):
     '''Return True if the profile exists, False otherwise'''
