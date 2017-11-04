@@ -1,5 +1,5 @@
 Name:           git-publish
-Version:        1.4
+Version:        1.4.1
 Release:        1%{?dist}
 Summary:        Prepare and store patch revisions as git tags
 License:        MIT
@@ -45,6 +45,9 @@ install -p -m 644 hooks/pre-publish-send-email.example %{buildroot}%{_datadir}/g
 %_datadir/git-publish/hooks/pre-publish-send-email.example
 
 %changelog
+* Sat Nov 4 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.4.1-1
+- Fix UTF-8 output from git(1) commands
+
 * Thu Nov 2 2017 Stefan Hajnoczi <stefanha@gmail.com> - 1.4-1
 - Python 3 support
 - Report unexpected changes to temporary directory
