@@ -26,10 +26,10 @@ emails are sent.
 %prep
 %autosetup
 
-# Force Python 3 in Fedora
+# Force Python 3 in recent distros
 # https://fedoraproject.org/wiki/Packaging:Python#Multiple_Python_Runtimes
-%if 0%{?fedora}
-sed -i '1c #!/usr/bin/python3' git-publish
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+sed -i '1c #!%{__python3}' git-publish
 %endif
 
 %install
