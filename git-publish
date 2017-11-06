@@ -265,12 +265,14 @@ def git_config_with_profile(*args):
     else:
         gitconfig = os.path.abspath(os.path.join(git_get_git_dir(), 'config'))
 
-    stdout, _ = popen_lines(cmd, input='''
+    git_config_file = '''
 [include]
     path = %s
     path = %s
     path = ~/.gitconfig
-''' % (gitpublish,  gitconfig))
+''' % (gitpublish,  gitconfig)
+
+    stdout, _ = popen_lines(cmd, input=git_config_file.encode('utf-8'))
     return stdout
 
 def check_profile_exists(profile_name):
