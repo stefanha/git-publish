@@ -718,7 +718,7 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name))
             if cc_cmd:
                 for x in patches:
                     output = subprocess.check_output(cc_cmd + " " + x,
-                                shell=True)
+                                shell=True).decode("utf-8")
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
