@@ -407,8 +407,8 @@ def parse_header(hdr):
         return hdr
 
 def edit_email_list(cc_list):
-    tmpfile = tempfile.NamedTemporaryFile(mode='w', suffix='.txt')
-    tmpfile.write(os.linesep.join(cc_list))
+    tmpfile = tempfile.NamedTemporaryFile(mode='wb', suffix='.txt')
+    tmpfile.write(os.linesep.join(cc_list).encode('utf-8'))
     tmpfile.flush()
     edit(tmpfile.name)
     r = []
