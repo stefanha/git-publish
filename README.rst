@@ -29,6 +29,20 @@ checking or automated test runs.
 Installing git-publish
 ======================
 
+Fedora/EPEL
+-----------
+
+git-publish is now available in Fedora 27, Fedora 26::
+
+  $ sudo dnf install git-publish
+
+and EPEL 7::
+
+  $ sudo yum install git-publish
+
+Install manually
+----------------
+
 First, put the git-publish script somewhere and make sure it has execute
 permissions::
 
