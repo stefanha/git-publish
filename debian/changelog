@@ -1,0 +1,5 @@
+git-publish (1.4.2-1) unstable; urgency=low
+
+  * Initial release. (Closes: #889847)
+
+ -- Philippe Mathieu-Daudé <f4bug@amsat.org>  Wed, 07 Feb 2018 15:27:52 -0300
