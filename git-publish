@@ -199,7 +199,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     _git_check(*args)
 
 def git_send_email(to_list, cc_list, patches, suppress_cc, in_reply_to, dry_run=False):
-    args = ['git', 'send-email']
+    args = ['git', 'send-email', '--8bit-encoding=utf-8']
     for address in to_list:
         args += ['--to', address]
     for address in cc_list:
