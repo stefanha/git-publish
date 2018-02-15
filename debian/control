@@ -12,6 +12,7 @@ Vcs-Git: https://github.com/stefanha/git-publish.git
 
 Package: git-publish
 Architecture: all
+Multi-Arch: foreign
 Depends:
  git,
  ${misc:Depends},
