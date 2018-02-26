@@ -331,7 +331,7 @@ def get_latest_tag_number(branch):
             number = n
     return number
 
-def get_latest_tag_message(topic):
+def get_latest_tag_message(topic, default_lines):
     '''Find the latest tag message or return a template if no tags exist'''
     msg = git_get_tag_message(tag_name_staging(topic))
     if msg:
@@ -342,7 +342,7 @@ def get_latest_tag_message(topic):
     if msg:
         return msg
 
-    return ['*** SUBJECT HERE ***', '', '*** BLURB HERE ***']
+    return default_lines
 
 def get_pull_request_message(base, remote, topic):
     # Add a subject line
@@ -655,11 +655,14 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name))
     invoke_hook('pre-publish-tag', base)
     # Tag the tree
     if options.pull_request:
-        tag_message = ['Pull request']
+        tag_message = get_latest_tag_message(topic, ['Pull request'])
         tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=True)
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
-        tag_message = get_latest_tag_message(topic)
+        tag_message = get_latest_tag_message(topic, [
+            '*** SUBJECT HERE ***',
+            '',
+            '*** BLURB HERE ***'])
         anno = options.edit or message
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
