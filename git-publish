@@ -494,7 +494,7 @@ def parse_args():
     parser.add_option('--cc', dest='cc', action='append', default=[],
                       help='specify a Cc: email recipient')
     parser.add_option('--cc-cmd',
-                      help='specify a command to add whose output to the cc list')
+                      help='specify a command whose output to add to the cc list')
     parser.add_option('--edit', dest='edit', action='store_true',
                       default=False, help='edit message but do not tag a new version')
     parser.add_option('--no-inspect-emails', dest='inspect_emails',
@@ -540,7 +540,7 @@ def parse_args():
     parser.add_option('--override-cc', dest='override_cc', action='store_true',
                       default=False, help='Ignore any profile or saved CC emails')
     parser.add_option('--in-reply-to', "-R",
-                      help='specify the in-reply-to of the cover letter (or the single patch)')
+                      help='specify the In-Reply-To: of the cover letter (or the single patch)')
 
     return parser.parse_args()
 
