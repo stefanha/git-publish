@@ -636,13 +636,14 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name))
     profile_message_var = get_profile_var(options.profile_name, 'message')
     if options.message is not None:
         message = options.message
-    elif options.pull_request:
-        message = False
     elif git_get_tag_message(tag_name_staging(topic)):
         # If there is a staged tag message, we definitely want a cover letter
         message = True
     elif profile_message_var is not None:
         message = bool_from_str(profile_message_var)
+    elif options.pull_request:
+        # Pull requests always get a cover letter by default
+        message = True
     else:
         config_cover_letter = git_get_config('format', 'coverLetter')
         if config_cover_letter is None or config_cover_letter.lower() == 'auto':
