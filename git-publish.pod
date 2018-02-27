@@ -55,6 +55,14 @@ Specify a Cc: email recipient.
 
 Specify a command add whose output to add the Cc: email recipient list.  See L<git-send-email(1)> for details.
 
+=item B<--no-check-url>
+
+Do not check whether the pull request URL is publicly accessible.
+
+=item B<--check-url>
+
+Check whether the pull request URL is publicly accessible.  This is the default.
+
 =item B<--edit>
 
 Edit message but do not tag a new version.  Use this to draft the cover letter before actually tagging a new version.
@@ -516,6 +524,12 @@ Same as the B<--inspect-emails> option.
 =item B<gitpublishprofile.PROFILENAME.notes>
 
 Same as the B<--notes> option.
+
+=item B<gitpublishprofile.PROFILENAME.checkUrl>
+
+=item B<git-publish.checkUrl>
+
+Same as the B<--no-check-url> and B<--check-url> options.
 
 =back
 

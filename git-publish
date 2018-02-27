@@ -158,6 +158,10 @@ def git_get_tag_message(tag):
         message.append(line)
     return None
 
+def git_get_remote_url(remote):
+    '''Return the URL for a given remote'''
+    return _git_check('ls-remote', '--get-url', remote)[0]
+
 def git_request_pull(base, remote, signed_tag):
     return _git_check('request-pull', base, remote, signed_tag)
 
@@ -495,6 +499,10 @@ def parse_args():
                       help='specify a Cc: email recipient')
     parser.add_option('--cc-cmd',
                       help='specify a command whose output to add to the cc list')
+    parser.add_option('--no-check-url', dest='check_url', action='store_false',
+                      help='skip publicly accessible pull request URL check')
+    parser.add_option('--check-url', dest='check_url', action='store_true',
+                      help='check pull request URLs are publicly accessible')
     parser.add_option('--edit', dest='edit', action='store_true',
                       default=False, help='edit message but do not tag a new version')
     parser.add_option('--no-inspect-emails', dest='inspect_emails',
@@ -631,6 +639,23 @@ def main():
             print('''Unable to determine remote repo to push.  Please set git config
 branch.%s.pushRemote, branch.%s.remote, remote.pushDefault, or
 gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name))
+            return 1
+
+        check_url = options.check_url
+        if check_url is None:
+            check_url_var = get_profile_var(options.profile_name, 'checkUrl')
+            if check_url_var is None:
+                check_url_var = git_get_config('git-publish', 'checkUrl')
+            if check_url_var is not None:
+                check_url = bool_from_str(check_url_var)
+        if check_url is None:
+            check_url = True
+
+        url = git_get_remote_url(remote)
+        if check_url and not any(url.startswith(scheme) for scheme in ('git://', 'http://', 'https://')):
+            print('''Possible private URL "%s", normally pull requests reference publicly
+accessible git://, http://, or https:// URLs.  Are you sure
+branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % (url, topic))
             return 1
 
     profile_message_var = get_profile_var(options.profile_name, 'message')
