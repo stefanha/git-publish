@@ -127,7 +127,7 @@ GIT_TOPLEVEL = None
 def git_get_toplevel_dir():
     global GIT_TOPLEVEL
     if GIT_TOPLEVEL is None:
-        GIT_TOPLEVEL = _git('rev-parse', '--show-toplevel')[0]
+        GIT_TOPLEVEL = _git_check('rev-parse', '--show-toplevel')[0]
     return GIT_TOPLEVEL
 
 GIT_DIR = None
