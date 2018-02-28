@@ -105,6 +105,14 @@ Select default settings from the given profile.
 
 Tag and send as a pull request.
 
+=item B<--sign-pull>
+
+Sign tag when sending pull request.
+
+=item B<--no-sign-pull>
+
+Do not sign tag when sending pull request.
+
 =item B<--subject-prefix=PREFIX>
 
 Set the email Subject: header prefix.
@@ -530,6 +538,12 @@ Same as the B<--notes> option.
 =item B<git-publish.checkUrl>
 
 Same as the B<--no-check-url> and B<--check-url> options.
+
+=item B<gitpublishprofile.PROFILENAME.signPull>
+
+=item B<git-publish.signPull>
+
+Same as the B<--no-sign-pull> and B<--sign-pull> options.
 
 =back
 
