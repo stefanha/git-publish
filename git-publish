@@ -522,6 +522,10 @@ def parse_args():
                       help='select default settings profile')
     parser.add_option('--pull-request', dest='pull_request', action='store_true',
                       default=False, help='tag and send as a pull request')
+    parser.add_option('--sign-pull', dest='sign_pull', action='store_true',
+                      help='sign tag when sending pull request')
+    parser.add_option('--no-sign-pull', dest='sign_pull', action='store_false',
+                      help='do not sign tag when sending pull request')
     parser.add_option('--subject-prefix', dest='prefix', default=None,
                       help='set the email Subject: header prefix')
     parser.add_option('--clear-subject-prefix', dest='clear_prefix',
@@ -659,6 +663,16 @@ accessible git://, http://, or https:// URLs.  Are you sure
 branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % (url, topic))
             return 1
 
+        sign_pull = options.sign_pull
+        if sign_pull is None:
+            sign_pull_var = get_profile_var(options.profile_name, 'signPull')
+            if sign_pull_var is None:
+                sign_pull_var = git_get_config('git-publish', 'signPull')
+            if sign_pull_var is not None:
+                sign_pull = bool_from_str(sign_pull_var)
+        if sign_pull is None:
+            sign_pull = True
+
     profile_message_var = get_profile_var(options.profile_name, 'message')
     if options.message is not None:
         message = options.message
@@ -682,7 +696,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
     # Tag the tree
     if options.pull_request:
         tag_message = get_latest_tag_message(topic, ['Pull request'])
-        tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=True)
+        tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=sign_pull)
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
         tag_message = get_latest_tag_message(topic, [
