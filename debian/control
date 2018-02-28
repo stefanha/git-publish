@@ -3,7 +3,7 @@ Maintainer: Philippe Mathieu-Daudé <f4bug@amsat.org>
 Section: vcs
 Priority: optional
 Build-Depends-Indep:
- debhelper (>= 11),
+ debhelper (>= 11~),
  dh-python,
  python:any,
 Standards-Version: 4.1.3
