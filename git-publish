@@ -485,6 +485,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
             print('\n'.join(output))
         elif a == 'a':
             break
+    return patches
 
 def parse_args():
 
@@ -760,8 +761,11 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
-                inspect_menu(tmpdir, to, cc, patches, suppress_cc,
-                             options.in_reply_to, topic, options.override_cc)
+                selected_patches = inspect_menu(tmpdir, to, cc, patches, suppress_cc,
+                                                options.in_reply_to, topic,
+                                                options.override_cc)
+            else:
+                selected_patches = patches
 
             invoke_hook('pre-publish-send-email', tmpdir)
 
@@ -776,7 +780,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                     print('Deleted files: %s' % ' '.join(deleted))
                 return 1
 
-            git_send_email(to, cc, patches, suppress_cc, options.in_reply_to)
+            git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to)
         except (GitError, GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         finally:
