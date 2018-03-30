@@ -771,7 +771,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
             if cc_cmd:
                 for x in patches:
                     output = subprocess.check_output(cc_cmd + " " + x,
-                                shell=True).decode("utf-8")
+                                shell=True, cwd=git_get_toplevel_dir()).decode("utf-8")
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
