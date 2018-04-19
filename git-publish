@@ -550,6 +550,8 @@ def parse_args():
                       help='show executed git commands (useful for troubleshooting)')
     parser.add_option('--forget-cc', dest='forget_cc', action='store_true',
                       default=False, help='Forget all previous CC emails')
+    parser.add_option('--override-to', dest='override_to', action='store_true',
+                      default=False, help='Ignore any profile or saved TO emails')
     parser.add_option('--override-cc', dest='override_cc', action='store_true',
                       default=False, help='Ignore any profile or saved CC emails')
     parser.add_option('--in-reply-to', "-R",
@@ -613,7 +615,7 @@ def main():
         number = get_latest_tag_number(topic) + 1
 
     to = set(options.to)
-    if not options.edit:
+    if not options.edit and not options.override_to:
         to = to.union(git_get_config_list('branch', topic, 'gitpublishto'))
         to = to.union(get_profile_var_list(options.profile_name, 'to'))
 

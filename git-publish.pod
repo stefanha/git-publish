@@ -161,6 +161,10 @@ Show executed git commands (useful for troubleshooting).
 
 Forget all previous Cc: email addresses.
 
+=item B<--override-to>
+
+Ignore any profile or saved To: email addresses.
+
 =item B<--override-cc>
 
 Ignore any profile or saved Cc: email addresses.
