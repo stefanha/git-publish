@@ -612,12 +612,10 @@ def main():
     else:
         number = get_latest_tag_number(topic) + 1
 
-    to = options.to
-    if not to and not options.edit:
-        to = git_get_config_list('branch', topic, 'gitpublishto')
-        if not to:
-            to = get_profile_var_list(options.profile_name, 'to')
-    to = set(to)
+    to = set(options.to)
+    if not options.edit:
+        to = to.union(git_get_config_list('branch', topic, 'gitpublishto'))
+        to = to.union(get_profile_var_list(options.profile_name, 'to'))
 
     if options.forget_cc:
         git_set_config('branch', topic, 'gitpublishcc', [])
