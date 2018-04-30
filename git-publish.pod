@@ -113,6 +113,10 @@ Sign tag when sending pull request.
 
 Do not sign tag when sending pull request.
 
+=item B<--blurb-template>
+
+Use a pre-defined blurb message for the series HEAD.
+
 =item B<--subject-prefix=PREFIX>
 
 Set the email Subject: header prefix.
@@ -414,16 +418,17 @@ command-line options take precedence.
 The following profile options are available:
 
   [gitpublishprofile "example"]
-  base = v2.1.0               # same as --base
-  remote = origin             # used if branch.<branch-name>.remote not set
-  prefix = PATCH              # same as --patch
-  to = patches@example.org    # same as --to
-  cc = maintainer@example.org # same as --cc
-  suppresscc = all            # same as --suppress-cc
-  message = true              # same as --message
-  signoff = true              # same as --signoff
-  inspect-emails = true       # same as --inspect-emails
-  notes = true                # same as --notes
+  base = v2.1.0                        # same as --base
+  remote = origin                      # used if branch.<branch-name>.remote not set
+  prefix = PATCH                       # same as --patch
+  to = patches@example.org             # same as --to
+  cc = maintainer@example.org          # same as --cc
+  suppresscc = all                     # same as --suppress-cc
+  message = true                       # same as --message
+  signoff = true                       # same as --signoff
+  inspect-emails = true                # same as --inspect-emails
+  notes = true                         # same as --notes
+  blurb-template = A blurb template    # same as --blurb-template
 
 The special "default" profile name is active when no --profile command-line
 option was given.  The default profile does not set any options but can be

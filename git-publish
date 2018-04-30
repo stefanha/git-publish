@@ -496,6 +496,8 @@ def parse_args():
                       default=False, help='review and edit each patch email')
     parser.add_option('-b', '--base', dest='base', default=None,
                       help='branch which this is based off [defaults to master]')
+    parser.add_option('--blurb-template', dest='blurb_template', default=None,
+                      help='Template for blurb [defaults to *** BLURB HERE ***]')
     parser.add_option('--cc', dest='cc', action='append', default=[],
                       help='specify a Cc: email recipient')
     parser.add_option('--cc-cmd',
@@ -632,6 +634,12 @@ def main():
         cc_cmd = git_get_config('branch', topic, 'gitpublishcccmd') or \
                  get_profile_var(options.profile_name, 'cccmd')
 
+    blurb_template = options.blurb_template
+    if not blurb_template:
+        blurb_template = '\n'.join(get_profile_var_list(options.profile_name, 'blurb-template'))
+    if not blurb_template:
+        blurb_template = "*** BLURB HERE ***"
+
     if options.pull_request:
         remote = git_get_config('branch', topic, 'pushRemote')
         if remote is None:
@@ -702,7 +710,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
         tag_message = get_latest_tag_message(topic, [
             '*** SUBJECT HERE ***',
             '',
-            '*** BLURB HERE ***'])
+            blurb_template])
         anno = options.edit or message
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
