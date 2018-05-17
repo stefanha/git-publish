@@ -6,7 +6,7 @@ git-publish - Prepare and store patch revisions as git tags
 
 =head1 SYNOPSIS
 
-  git-publish [options]
+  git-publish [options] -- [common format-patch options]
 
 =head1 DESCRIPTION
 
