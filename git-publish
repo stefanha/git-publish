@@ -183,7 +183,7 @@ def git_tag(name, annotate=None, force=False, sign=False):
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
                      numbered=False, cover_letter=False, signoff=False,
-                     notes=False):
+                     notes=False, extra_args=[]):
     args = ['format-patch']
     if subject_prefix:
         args += ['--subject-prefix', subject_prefix]
@@ -200,6 +200,7 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
     if notes:
         args += ['--notes']
     args += [revlist]
+    args += extra_args
     _git_check(*args)
 
 def git_send_email(to_list, cc_list, patches, suppress_cc, in_reply_to, dry_run=False):
@@ -490,6 +491,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
 def parse_args():
 
     parser = optparse.OptionParser(version='%%prog %s' % VERSION,
+            usage='%prog [options] -- [common format-patch options]',
             description='Prepare and store patch revisions as git tags.',
             epilog='Please report bugs to Stefan Hajnoczi <stefanha@gmail.com>.')
     parser.add_option('--annotate', dest='annotate', action='store_true',
@@ -765,7 +767,8 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                              numbered=numbered,
                              cover_letter=message,
                              signoff=signoff,
-                             notes=notes)
+                             notes=notes,
+                             extra_args=args)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
                 lines = open(cover_letter_path).readlines()
