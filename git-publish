@@ -477,7 +477,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
             edit(*patches)
         elif a == 's':
             listfile = tempfile.NamedTemporaryFile()
-            listfile.write("\n".join(patches))
+            listfile.write("\n".join(patches).encode('utf-8'))
             listfile.flush()
             edit(listfile.name)
             listfile.seek(0)
