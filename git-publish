@@ -106,12 +106,12 @@ def git_set_config(*components):
     val = components[-1]
     name = '.'.join(components[:-1])
 
-    if hasattr(val, '__iter__'):
+    if isinstance(val, (str, bytes)) or not hasattr(val, '__iter__'):
+        _git('config', name, val)
+    else:
         git_unset_config(name)
         for v in val:
             _git('config', '--add', name, v)
-    else:
-        _git('config', name, val)
 
 def git_get_var(name):
     '''Get a git-var(1)'''
