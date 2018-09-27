@@ -15,6 +15,10 @@ Packages are available for:
 * [Debian](https://packages.debian.org/buster/git-publish) and [Ubuntu](https://packages.ubuntu.com/bionic/git-publish) - `apt install git-publish`
 * [RHEL and CentOS](https://koji.fedoraproject.org/koji/packageinfo?packageID=25588) via [EPEL](https://fedoraproject.org/wiki/EPEL) - `yum install git-publish`
 
+You can also run git-publish from the source tree (useful for development):
+
+```$ git clone https://github.com/stefanha/git-publish```
+
 Run `git-publish --setup` to install the git alias so you can invoke `git publish` instead of `git-publish`.
 
 ## How it works
