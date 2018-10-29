@@ -24,8 +24,8 @@ check() {
 	fi
 }
 
-check '^Subject: \[RH' 'missing RHEL/RHEV/RHV tag in Subject: line'
-check '^Subject: \[.* qemu-kvm.*\]' 'missing qemu-kvm/qemu-kvm-rhev tag in Subject: line'
+check '^Subject: \[.*RH.*\]' 'missing RHEL/RHEV/RHV tag in Subject: line'
+check '^Subject: \[.*qemu-kvm.*\]' 'missing qemu-kvm/qemu-kvm-rhev tag in Subject: line'
 check '^\(Bugzilla\|BZ\): ' 'missing Bugzilla: header in cover letter'
 check '^\(Brew\|BREW\): ' 'missing Brew: header in cover letter'
 check '^Upstream: ' 'missing Upstream: header in cover letter'
