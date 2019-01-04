@@ -168,7 +168,7 @@ def git_request_pull(base, remote, signed_tag):
 def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
 
-def git_tag(name, annotate=None, force=False, sign=False):
+def git_tag(name, annotate=None, force=False, sign=False, keyid=None):
     args = ['tag', '-a']
     if annotate:
         args += ['-F', annotate]
@@ -178,6 +178,8 @@ def git_tag(name, annotate=None, force=False, sign=False):
         args += ['-f']
     if sign:
         args += ['-s']
+    if keyid:
+        args += ['-k', keyid]
     args += [name]
     _git_check(*args)
 
@@ -374,7 +376,7 @@ def edit(*filenames):
     cmd.extend(filenames)
     subprocess.call(cmd)
 
-def tag(name, template, annotate=False, force=False, sign=False):
+def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
     '''Edit a tag message and create the tag'''
     fd, tmpfile = None, None
 
@@ -384,7 +386,7 @@ def tag(name, template, annotate=False, force=False, sign=False):
             os.fdopen(fd, 'wb').write(os.linesep.join(template + ['']).encode('utf-8'))
             edit(tmpfile)
 
-        git_tag(name, annotate=tmpfile, force=force, sign=sign)
+        git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
     finally:
         if tmpfile:
             os.unlink(tmpfile)
@@ -528,6 +530,8 @@ def parse_args():
                       default=False, help='tag and send as a pull request')
     parser.add_option('--sign-pull', dest='sign_pull', action='store_true',
                       help='sign tag when sending pull request')
+    parser.add_option('-k', '--keyid', dest='keyid',
+                      help='use the given GPG key when signing pull request tag')
     parser.add_option('--no-sign-pull', dest='sign_pull', action='store_false',
                       help='do not sign tag when sending pull request')
     parser.add_option('--subject-prefix', dest='prefix', default=None,
@@ -702,11 +706,17 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
         else:
             message = bool_from_str(config_cover_letter)
 
+    keyid = options.keyid
+    if keyid is None:
+        keyid_var = get_profile_var(options.profile_name, 'signingkey')
+        if keyid_var is None:
+            keyid_var = git_get_config('git-publish', 'signingkey')
+
     invoke_hook('pre-publish-tag', base)
     # Tag the tree
     if options.pull_request:
         tag_message = get_latest_tag_message(topic, ['Pull request'])
-        tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=sign_pull)
+        tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=sign_pull, keyid=keyid)
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
         tag_message = get_latest_tag_message(topic, [
