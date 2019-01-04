@@ -113,6 +113,12 @@ Sign tag when sending pull request.
 
 Do not sign tag when sending pull request.
 
+=item B<-k KEYID>
+
+=item B<--keyid=KEYID>
+
+Use the given GPG key to sign tag when sending pull request
+
 =item B<--blurb-template>
 
 Use a pre-defined blurb message for the series HEAD.
@@ -553,6 +559,10 @@ Same as the B<--no-check-url> and B<--check-url> options.
 =item B<git-publish.signPull>
 
 Same as the B<--no-sign-pull> and B<--sign-pull> options.
+
+=item B<git-publish.signingkey>
+
+Same as the B<--keyid> option.
 
 =back
 
