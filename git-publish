@@ -21,7 +21,6 @@ import re
 import tempfile
 import shutil
 import subprocess
-import signal
 import locale
 from email import message_from_file, header
 
