@@ -22,11 +22,14 @@ import tempfile
 import shutil
 import subprocess
 import signal
+import locale
 from email import message_from_file, header
 
 VERSION = '1.4.4'
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
+
+ENCODING = locale.getpreferredencoding()
 
 # As a git alias it is helpful to be a single file script with no external
 # dependencies, so these git command-line wrappers are used instead of
@@ -47,8 +50,8 @@ class InspectEmailsError(Exception):
 def popen_lines(cmd, **kwargs):
     '''Communicate with a Popen object and return a list of lines for stdout and stderr'''
     stdout, stderr = cmd.communicate(**kwargs)
-    stdout = stdout.decode('utf-8').split(os.linesep)[:-1]
-    stderr = stderr.decode('utf-8').split(os.linesep)[:-1]
+    stdout = stdout.decode(ENCODING).split(os.linesep)[:-1]
+    stderr = stderr.decode(ENCODING).split(os.linesep)[:-1]
     return stdout, stderr
 
 def _git_check(*args):
@@ -278,7 +281,7 @@ def git_config_with_profile(*args):
     path = ~/.gitconfig
 ''' % (gitpublish,  gitconfig)
 
-    stdout, _ = popen_lines(cmd, input=git_config_file.encode('utf-8'))
+    stdout, _ = popen_lines(cmd, input=git_config_file.encode(ENCODING))
     return stdout
 
 def check_profile_exists(profile_name):
@@ -383,7 +386,7 @@ def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
     try:
         if annotate:
             fd, tmpfile = tempfile.mkstemp(text=True)
-            os.fdopen(fd, 'wb').write(os.linesep.join(template + ['']).encode('utf-8'))
+            os.fdopen(fd, 'wb').write(os.linesep.join(template + ['']).encode(ENCODING))
             edit(tmpfile)
 
         git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
@@ -415,7 +418,7 @@ def parse_header(hdr):
 
 def edit_email_list(cc_list):
     tmpfile = tempfile.NamedTemporaryFile(mode='wb', suffix='.txt')
-    tmpfile.write(os.linesep.join(cc_list).encode('utf-8'))
+    tmpfile.write(os.linesep.join(cc_list).encode(ENCODING))
     tmpfile.flush()
     edit(tmpfile.name)
     r = []
@@ -479,7 +482,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
             edit(*patches)
         elif a == 's':
             listfile = tempfile.NamedTemporaryFile()
-            listfile.write("\n".join(patches).encode('utf-8'))
+            listfile.write("\n".join(patches).encode(ENCODING))
             listfile.flush()
             edit(listfile.name)
             listfile.seek(0)
@@ -792,7 +795,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
             if cc_cmd:
                 for x in patches:
                     output = subprocess.check_output(cc_cmd + " " + x,
-                                shell=True, cwd=git_get_toplevel_dir()).decode("utf-8")
+                                shell=True, cwd=git_get_toplevel_dir()).decode(ENCODING)
                     cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
