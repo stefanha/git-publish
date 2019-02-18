@@ -386,7 +386,7 @@ def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
     try:
         if annotate:
             fd, tmpfile = tempfile.mkstemp(text=True)
-            os.fdopen(fd, 'wb').write(os.linesep.join(template + ['']).encode(ENCODING))
+            open(fd, 'wb').write(os.linesep.join(template + ['']).encode(ENCODING))
             edit(tmpfile)
 
         git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
