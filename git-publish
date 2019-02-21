@@ -46,6 +46,11 @@ class GitHookError(Exception):
 class InspectEmailsError(Exception):
     pass
 
+def to_text(data):
+    if isinstance(data, bytes):
+        return data.decode(ENCODING)
+    return data
+
 def popen_lines(cmd, **kwargs):
     '''Communicate with a Popen object and return a list of lines for stdout and stderr'''
     stdout, stderr = cmd.communicate(**kwargs)
@@ -624,7 +629,7 @@ def main():
     else:
         number = get_latest_tag_number(topic) + 1
 
-    to = set(options.to)
+    to = set([to_text(_) for _ in options.to])
     if not options.edit and not options.override_to:
         to = to.union(git_get_config_list('branch', topic, 'gitpublishto'))
         to = to.union(get_profile_var_list(options.profile_name, 'to'))
@@ -632,7 +637,7 @@ def main():
     if options.forget_cc:
         git_set_config('branch', topic, 'gitpublishcc', [])
 
-    cc = set(options.cc)
+    cc = set([to_text(_) for _ in options.cc])
     if not options.edit and not options.override_cc:
         cc = cc.union(git_get_config_list('branch', topic, 'gitpublishcc'))
         cc = cc.union(get_profile_var_list(options.profile_name, 'cc'))
