@@ -95,6 +95,12 @@ Do not add a message.
 
 Add a message.
 
+=item B<--no-binary>
+
+Do not output contents of changes in binary files, instead display a
+notice that those files changed. Patches generated using this option
+cannot be applied properly, but they are still useful for code review.
+
 =item B<-p PROFILE_NAME>
 
 =item B<--profile=PROFILE_NAME>

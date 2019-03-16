@@ -192,7 +192,7 @@ def git_tag(name, annotate=None, force=False, sign=False, keyid=None):
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
                      numbered=False, cover_letter=False, signoff=False,
-                     notes=False, extra_args=[]):
+                     notes=False, binary=True, extra_args=[]):
     args = ['format-patch']
     if subject_prefix:
         args += ['--subject-prefix', subject_prefix]
@@ -208,6 +208,8 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
         args += ['--signoff']
     if notes:
         args += ['--notes']
+    if not binary:
+        args += ['--no-binary']
     args += [revlist]
     args += extra_args
     _git_check(*args)
@@ -531,6 +533,9 @@ def parse_args():
                       action='store_false', help='do not add a message')
     parser.add_option('-m', '--message', '--cover-letter', dest='message',
                       action='store_true', help='add a message')
+    parser.add_option('--no-binary', dest='binary',
+                      action='store_false',
+                      help='Do not output contents of changes in binary files, instead display a notice that those files changed')
     parser.add_option('--profile', '-p', dest='profile_name', default='default',
                       help='select default settings profile')
     parser.add_option('--pull-request', dest='pull_request', action='store_true',
@@ -785,6 +790,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                              cover_letter=message,
                              signoff=signoff,
                              notes=notes,
+                             binary=options.binary,
                              extra_args=args)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
