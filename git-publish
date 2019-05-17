@@ -60,14 +60,15 @@ def popen_lines(cmd, **kwargs):
 
 def _git_check(*args):
     '''Run a git command and return a list of lines, may raise GitError'''
+    cmdstr = 'git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args)
     if VERBOSE:
-        print('git ' + ' '.join(('"%s"' % arg if ' ' in arg else arg) for arg in args))
+        print(cmdstr)
     cmd = subprocess.Popen(['git'] + list(args),
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
     stdout, stderr = popen_lines(cmd)
     if cmd.returncode != 0:
-        raise GitError('\n'.join(stderr))
+        raise GitError('ERROR: %s\n%s' % (cmdstr, '\n'.join(stderr)))
     return stdout
 
 def _git(*args):
