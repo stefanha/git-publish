@@ -829,7 +829,10 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                 return 1
 
             git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to)
-        except (GitError, GitSendEmailError, GitHookError, InspectEmailsError):
+        except (GitSendEmailError, GitHookError, InspectEmailsError):
+            return 1
+        except GitError as e:
+            print(e)
             return 1
         finally:
             if tmpdir:
