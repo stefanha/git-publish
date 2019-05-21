@@ -613,9 +613,6 @@ def main():
         topic = options.topic
     else:
         topic = current_branch
-        if topic == 'master':
-            print('Please use a topic branch, cannot version master branch')
-            return 1
 
     base = options.base
     if not base:
@@ -626,6 +623,10 @@ def main():
         base = git_get_config('git-publish', 'base')
     if not base:
         base = 'master'
+
+    if topic == base:
+        print('Please use a topic branch, cannot version the base branch (%s)' % base)
+        return 1
 
     if options.number >= 0:
         number = options.number
