@@ -194,7 +194,7 @@ def git_tag(name, annotate=None, force=False, sign=False, keyid=None):
     if sign:
         args += ['-s']
     if keyid:
-        args += ['-k', keyid]
+        args += ['--local-user', keyid]
     args += [name]
     _git_check(*args)
 
