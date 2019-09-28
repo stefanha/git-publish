@@ -190,7 +190,7 @@ def git_tag(name, annotate=None, force=False, sign=False, keyid=None):
 
 def git_format_patch(revlist, subject_prefix=None, output_directory=None,
                      numbered=False, cover_letter=False, signoff=False,
-                     notes=False, binary=True, extra_args=[]):
+                     notes=False, binary=True, headers=[], extra_args=[]):
     args = ['format-patch']
     if subject_prefix:
         args += ['--subject-prefix', subject_prefix]
@@ -208,6 +208,10 @@ def git_format_patch(revlist, subject_prefix=None, output_directory=None,
         args += ['--notes']
     if not binary:
         args += ['--no-binary']
+
+    for header in headers:
+        args += ['--add-header', header]
+
     args += [revlist]
     args += extra_args
     _git_check(*args)
@@ -570,6 +574,8 @@ def parse_args():
                       default=False, help='Ignore any profile or saved CC emails')
     parser.add_option('--in-reply-to', "-R",
                       help='specify the In-Reply-To: of the cover letter (or the single patch)')
+    parser.add_option('--add-header', '-H', action='append', dest='headers',
+                      help='specify custom headers to git-send-email')
 
     return parser.parse_args()
 
@@ -652,6 +658,10 @@ def main():
         blurb_template = '\n'.join(get_profile_var_list(options.profile_name, 'blurb-template'))
     if not blurb_template:
         blurb_template = "*** BLURB HERE ***"
+
+    headers = options.headers
+    if not headers:
+        headers = []
 
     if options.pull_request:
         remote = git_get_config('branch', topic, 'pushRemote')
@@ -786,6 +796,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                              signoff=signoff,
                              notes=notes,
                              binary=options.binary,
+                             headers=headers,
                              extra_args=args)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
