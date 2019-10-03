@@ -156,15 +156,7 @@ def git_get_tags(pattern=None):
         return _git('tag')
 
 def git_get_tag_message(tag):
-    message = []
-    # Hide stderr when tag does not exist
-    for line in _git_with_stderr('show', '--raw', '--no-color',
-                                 '--pretty=medium', tag)[0][4:]:
-        if line.startswith('commit '):
-            message.pop()
-            return message
-        message.append(line)
-    return None
+    return _git('tag', '-l', '--format=%(contents)', tag)
 
 def git_get_remote_url(remote):
     '''Return the URL for a given remote'''
