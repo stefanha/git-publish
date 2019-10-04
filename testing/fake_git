@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+#
+# Copyright 2019 Red Hat, Inc.
+#
+# Authors:
+#   Eduardo Habkost <ehabkost@redhat.com>
+#
+# This work is licensed under the MIT License.  Please see the LICENSE file or
+# http://opensource.org/licenses/MIT.
+
+"""
+fake_git - fake git command that should be used by git-publish
+           when running test cases
+
+The following environment variables must be set:
+
+- $REAL_GIT - path to real git binary
+- $FAKE_GIT_LOG - path to human-readable debugging log
+- $FAKE_GIT_COMMAND_LOG - path to machine-readable command log
+"""
+
+import sys
+import os
+import logging
+import shlex
+
+logger = logging.getLogger('fakegit')
+dbg = logger.debug
+
+def escape_command(command):
+    return ' '.join(shlex.quote(a) for a in command)
+
+def run_real_git(args):
+    global REAL_GIT
+    dbg("Running real git: %r", args)
+    os.execl(REAL_GIT, 'git', *args)
+
+def run_send_email(args):
+    if '--dry-run' not in args:
+        logger.error("git send-email not run using --dry-run")
+        sys.exit(1)
+    run_real_git(args)
+
+# harmless commands that can be always run:
+PASSTHROUGH_COMMANDS = ['tag', 'rev-parse', 'symbolic-ref', 'format-patch']
+
+# special commands that require some validation:
+SPECIAL_COMMANDS = {
+    'send-email': run_send_email,
+}
+
+if len(sys.argv) < 2:
+    sys.exit(1)
+
+REAL_GIT = os.getenv("REAL_GIT")
+if not REAL_GIT:
+    print("$REAL_GIT not set", file=sys.stderr)
+    sys.exit(1)
+
+if not os.access(REAL_GIT, os.X_OK):
+    print("$REAL_GIT not executable", file=sys.stderr)
+    sys.exit(1)
+
+# debugging log:
+log_file = os.getenv("FAKE_GIT_LOG")
+if not log_file:
+    print("$FAKE_GIT_LOG not set", file=sys.stderr)
+    sys.exit(1)
+logging.basicConfig(filename=log_file, level=logging.DEBUG)
+
+# warning and errors also go to stderr:
+err_handler = logging.StreamHandler()
+err_handler.setLevel(logging.WARN)
+logging.getLogger('').addHandler(err_handler)
+
+# command log:
+command_log = os.getenv("FAKE_GIT_COMMAND_LOG")
+if not command_log:
+    print("$FAKE_GIT_COMMAND_LOG not set", file=sys.stderr)
+    sys.exit(1)
+
+args = sys.argv[1:]
+logger.info("Command: %r", args)
+with open(command_log, 'a') as f:
+    f.write('%s\n' % (escape_command(args)))
+
+if args[0] in PASSTHROUGH_COMMANDS:
+    run_real_git(args)
+elif args[0] in SPECIAL_COMMANDS:
+    SPECIAL_COMMANDS[args[0]](args)
+else:
+    logger.error("command not allowed: %r", args)
+    sys.exit(1)
