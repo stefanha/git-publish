@@ -156,7 +156,12 @@ def git_get_tags(pattern=None):
         return _git('tag')
 
 def git_get_tag_message(tag):
-    return _git('tag', '-l', '--format=%(contents)', tag)
+    r = _git('tag', '-l', '--format=%(contents)', tag)
+    # --format=%(contents) will print an extra newline if the tag message
+    # already ends with a newline, so drop the extra line at the end:
+    if r and r[-1] == '':
+        r.pop()
+    return r
 
 def git_get_remote_url(remote):
     '''Return the URL for a given remote'''
