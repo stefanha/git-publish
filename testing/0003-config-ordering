@@ -1,0 +1,44 @@
+#!/bin/bash
+# Ensure configuration file precedence is correct
+#
+# Copyright 2019 Red Hat, Inc.
+#
+# Authors:
+#   Eduardo Habkost <ehabkost@redhat.com>
+#
+# This work is licensed under the MIT License.  Please see the LICENSE file or
+# http://opensource.org/licenses/MIT.
+
+source "$TESTS_DIR/functions.sh"
+
+out="$TEST_DIR/git-publish.stdout"
+
+git config --global gitpublishprofile.global1.prefix GLOBAL1
+git config --global gitpublishprofile.global2.prefix GLOBAL2
+git config --global gitpublishprofile.default.prefix GLOBALDEFAULT
+
+rm -f "$FAKE_GIT_COMMAND_LOG"
+git-publish --no-inspect-emails --to somebody@example.com -b HEAD^ \
+    2>> "$TEST_DIR/stderr.log" || :
+grep -q -- '--subject-prefix GLOBALDEFAULT' "$FAKE_GIT_COMMAND_LOG" || \
+    abort "Global default profile prefix was ignored"
+
+git config --file .gitpublish gitpublishprofile.project1.prefix PROJECT1
+git config --file .gitpublish gitpublishprofile.project2.prefix PROJECT2
+git config --file .gitpublish gitpublishprofile.default.prefix PROJECTDEFAULT
+
+rm -f "$FAKE_GIT_COMMAND_LOG"
+git-publish --no-inspect-emails --to somebody@example.com -b HEAD^ \
+    2>> "$TEST_DIR/stderr.log" || :
+grep -q -- '--subject-prefix PROJECTDEFAULT' "$FAKE_GIT_COMMAND_LOG" || \
+    abort "Project-defined default profile prefix was ignored"
+
+git config --local gitpublishprofile.local1.prefix LOCAL1
+git config --local gitpublishprofile.local2.prefix LOCAL2
+git config --local gitpublishprofile.default.prefix LOCALDEFAULT
+
+rm -f "$FAKE_GIT_COMMAND_LOG"
+git-publish --no-inspect-emails --to somebody@example.com -b HEAD^ \
+    2>> "$TEST_DIR/stderr.log" || :
+grep -q -- '--subject-prefix LOCALDEFAULT' "$FAKE_GIT_COMMAND_LOG" || \
+    abort "Local default profile prefix was ignored"

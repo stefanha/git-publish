@@ -280,9 +280,9 @@ def git_config_with_profile(*args):
 
     git_config_file = '''
 [include]
-    path = %s
-    path = %s
     path = ~/.gitconfig
+    path = %s
+    path = %s
 ''' % (gitpublish,  gitconfig)
 
     stdout, _ = popen_lines(cmd, input=git_config_file.encode(ENCODING))
