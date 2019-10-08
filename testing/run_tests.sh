@@ -83,6 +83,10 @@ run_test_case()
     echo OK
 }
 
+# override $HOME so that git-config will never read/write ~/.gitconfig
+mkdir "$RESULTS_DIR/home"
+export HOME="$RESULTS_DIR/home"
+
 SOURCE_DIR="$RESULTS_DIR/source"
 mkdir "$SOURCE_DIR"
 cd "$SOURCE_DIR"
