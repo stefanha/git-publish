@@ -1,0 +1,27 @@
+#!/bin/bash
+# ensure git-config $HOME override is working as expected
+#
+# Copyright 2019 Red Hat, Inc.
+#
+# Authors:
+#   Eduardo Habkost <ehabkost@redhat.com>
+#
+# This work is licensed under the MIT License.  Please see the LICENSE file or
+# http://opensource.org/licenses/MIT.
+
+source "$TESTS_DIR/functions.sh"
+
+assert [ "$HOME" = "$RESULTS_DIR/home" ]
+
+cat >> "$HOME/.gitconfig" <<EOF
+[gitpublishtesting]
+readingworks=yes
+EOF
+
+[ "$(git config --global --show-origin --list)" = \
+  "file:$HOME/.gitconfig	gitpublishtesting.readingworks=yes" ] || \
+    abort "git config is not reading .gitconfig"
+
+git config --global gitpublishtsting.writingworks yes
+egrep -q 'writingworks *= *yes' "$HOME/.gitconfig" ||
+	abort "Setting global config option didn't work"
