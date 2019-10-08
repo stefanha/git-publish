@@ -293,12 +293,10 @@ def check_profile_exists(profile_name):
     lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.%s\\.' % profile_name)
     return bool(lines)
 
-def get_first_profile():
-    '''Return name of the first profile, None if no profile is found'''
+def has_profiles():
+    '''Return True if any profile exists, False otherwise'''
     lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.*\\.')
-    if len(lines):
-        return lines[0].split(".")[1]
-    return None
+    return bool(lines)
 
 def get_profile_var(profile_name, var_name):
     '''Get a profile variable'''
@@ -599,7 +597,7 @@ def main():
 
     if not check_profile_exists(options.profile_name):
         if options.profile_name == 'default':
-            if get_first_profile():
+            if has_profiles():
                 print('Using defaults when a non-default profile exists. Forgot to pass --profile ?')
         else:
             print('Profile "%s" does not exist, please check .gitpublish or git-config(1) files' % options.profile_name)
