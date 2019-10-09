@@ -28,15 +28,7 @@ def git_publish_path():
     return os.getenv('GIT_PUBLISH')
 
 def git_publish(args, **kwargs):
-    """Helper to run git-publish using subprocess.run()
-
-    stdout and stderr will be redirected to log files by default.
-    All arguments will be forwarded to subprocess.run()
-    """
+    """Helper to run git-publish using subprocess.run()"""
     if isinstance(args, str):
         args = shlex.split(args)
-    if 'stderr' not in kwargs:
-        kwargs['stderr'] = open_test_log('stderr.log')
-    if 'stdout' not in kwargs:
-        kwargs['stdout'] = open_test_log('stdout.log')
     return subprocess.run([git_publish_path()] + args, **kwargs)

@@ -12,8 +12,7 @@
 source "$TESTS_DIR/functions.sh"
 
 # ensure fake_git is refusing to run git-send-email without --dry-run:
-if git send-email --quiet --to somebody@example.com \
-    HEAD^..HEAD 2>>"$TEST_DIR/stderr.log";then
+if git send-email --quiet --to somebody@example.com HEAD^..HEAD;then
     abort "fake_git send-email without '--dry-run' was supposed to fail"
 fi
 grep -q 'send-email --quiet --to somebody@example.com' "$FAKE_GIT_COMMAND_LOG" || \
@@ -26,7 +25,6 @@ fi
 
 # ensure simple git-publish usage is actually using fake_git:
 rm -f "$FAKE_GIT_COMMAND_LOG"
-echo q | git-publish -b HEAD^ --to somebody@example.com \
-    --inspect-emails >>"$TEST_DIR/stdout.log" || :
+echo q | git-publish -b HEAD^ --to somebody@example.com --inspect-emails || :
 [ -s "$FAKE_GIT_COMMAND_LOG" ] || \
     abort "git-publish didn't run fake_git"

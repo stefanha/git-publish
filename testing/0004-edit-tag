@@ -38,7 +38,7 @@ body 3
 EOF
 
 # check if message is not being corrupted by git-publish:
-git tag -f -F "$msgfile" mybranch-staging >> "$TEST_DIR/stdout.log"
+git tag -f -F "$msgfile" mybranch-staging
 export GIT_EDITOR="true"
 git-publish --edit
 tag_contents="$(git tag -l '--format=%(contents)' mybranch-staging)"
