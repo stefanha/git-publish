@@ -74,10 +74,12 @@ run_test_case()
     export FAKE_GIT_LOG="$TEST_DIR/fake_git.log"
     export FAKE_GIT_COMMAND_LOG="$TEST_DIR/fake_git_commands.log"
     echo -n "Running test case $test_name: "
-    if ! "$test_case";then
-        tail_fake_git_log
-        echo "Test case $t failed" >&2
-        echo "Check logs at $TEST_DIR" >&2
+    if ! "$test_case" > "$TEST_DIR/test_output.log" 2>&1;then
+        echo FAILED
+        echo "--- Last 10 lines of test output: ---"
+        tail -n 10 "$TEST_DIR/test_output.log"
+        echo "-------------------------------------"
+        echo "Other log files are available at $TEST_DIR" >&2
         exit 1
     fi
     echo OK
