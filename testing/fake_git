@@ -46,7 +46,7 @@ def run_send_email(args):
 # we will never touch the real ~/.gitconfig.  See the 0000-gitconfig-home
 # test case
 PASSTHROUGH_COMMANDS = ['tag', 'rev-parse', 'symbolic-ref', 'format-patch',
-                        'config']
+                        'config', 'checkout', 'var']
 
 # special commands that require some validation:
 SPECIAL_COMMANDS = {

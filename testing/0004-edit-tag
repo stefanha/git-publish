@@ -1,0 +1,46 @@
+#!/bin/bash
+source "$TESTS_DIR/functions.sh"
+
+msgfile="$TEST_DIR/message"
+
+cat >"$msgfile" <<EOF
+message 1 😀
+
+body 1
+EOF
+
+# trick to copy existing file instead of running editor:
+export GIT_EDITOR="cp $msgfile"
+
+git checkout -q -b mybranch
+git-publish --edit
+tag_contents="$(git tag -l '--format=%(contents)' mybranch-staging)"
+[ "$tag_contents" = "$(cat "$msgfile")" ] || \
+    abort "Message 1 not found in tag contents"
+
+# change tag message:
+cat >"$msgfile" <<EOF
+message 2 😃
+
+body 2
+EOF
+
+git-publish --edit
+tag_contents="$(git tag -l '--format=%(contents)' mybranch-staging)"
+[ "$tag_contents" = "$(cat "$msgfile")" ] || \
+    abort "Message 2 not found in tag contents"
+
+
+cat >"$msgfile" <<EOF
+message 3 😄
+
+body 3
+EOF
+
+# check if message is not being corrupted by git-publish:
+git tag -f -F "$msgfile" mybranch-staging >> "$TEST_DIR/stdout.log"
+export GIT_EDITOR="true"
+git-publish --edit
+tag_contents="$(git tag -l '--format=%(contents)' mybranch-staging)"
+[ "$tag_contents" = "$(cat "$msgfile")" ] || \
+    abort "Tag contents were corrupted by git-publish"
