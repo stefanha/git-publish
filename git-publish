@@ -407,16 +407,14 @@ def menu_select(menu):
         return a
 
 def parse_header(hdr):
-    try:
-        r = ''
-        for h, c in header.decode_header(hdr):
-            r += unicode(h, c) if c else h
-        if '\n' in r:
-            r = " ".join([x.strip() for x in r.splitlines()])
-        return r
-    except:
-        sys.stderr.write("Failed to parse email header: %s\n", hdr)
-        return hdr
+    r = ''
+    for h, c in header.decode_header(hdr):
+        if c is None:
+            c = 'us-ascii'
+        r += h.decode(c)
+    if '\n' in r:
+        r = " ".join([x.strip() for x in r.splitlines()])
+    return r
 
 def edit_email_list(cc_list):
     tmpfile = tempfile.NamedTemporaryFile(mode='wb', suffix='.txt')
