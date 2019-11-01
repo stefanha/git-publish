@@ -92,6 +92,14 @@ export HOME="$RESULTS_DIR/home"
 SOURCE_DIR="$RESULTS_DIR/source"
 mkdir "$SOURCE_DIR"
 cd "$SOURCE_DIR"
+
+# set fake user name and email to make git happy if system values are not set
+cat >> "$RESULTS_DIR/home/.gitconfig" <<EOF
+[user]
+	email = git-publish-tests@example.com
+	name = git-publish tests
+EOF
+
 create_git_repo
 
 setup_path
