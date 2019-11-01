@@ -18,7 +18,7 @@ cat >> "$HOME/.gitconfig" <<EOF
 readingworks=yes
 EOF
 
-[ "$(git config --global --show-origin --list)" = \
+[ "$(git config --global --show-origin --list | grep readingworks)" = \
   "file:$HOME/.gitconfig	gitpublishtesting.readingworks=yes" ] || \
     abort "git config is not reading .gitconfig"
 
