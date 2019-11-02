@@ -425,7 +425,12 @@ def parse_header(hdr):
     for h, c in header.decode_header(hdr):
         if c is None:
             c = 'us-ascii'
-        r += h.decode(c)
+
+        if sys.version_info > (3, 0) and type(h) is str:
+            r += h
+        else:
+            r += h.decode(c)
+
     if '\n' in r:
         r = " ".join([x.strip() for x in r.splitlines()])
     return r
