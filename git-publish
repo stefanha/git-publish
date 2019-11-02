@@ -302,6 +302,28 @@ def git_config_with_profile(*args):
     stdout, _ = popen_lines(cmd, input=git_config_file.encode(ENCODING))
     return stdout
 
+def git_cover_letter_info(base, topic, to, cc, in_reply_to, number):
+    cl_info = ['Lines starting with \'#\' will be ignored.']
+    cl_info += ['']
+
+    cl_info += ['Version number: ' + str(number)]
+    cl_info += ['Braches:']
+    cl_info += ['         base:  ' + base, '         topic: ' + topic]
+    cl_info += ['']
+
+    if to:
+        cl_info += ['To: ' + '\n#     '.join(list(to))]
+    if cc:
+        cl_info += ['Cc: ' + '\n#     '.join(list(cc))]
+    if in_reply_to:
+        cl_info += ['In-Reply-To: ' + in_reply_to]
+    cl_info += ['']
+
+    cl_info += _git('shortlog', base + '..' + topic)
+    cl_info += _git('diff', '--stat', base + '..' + topic)
+
+    return ["#" + (l if l == '' else ' ' + l) for l in cl_info]
+
 def check_profile_exists(profile_name):
     '''Return True if the profile exists, False otherwise'''
     lines = git_config_with_profile('--get-regexp', '^gitpublishprofile\\.%s\\.' % profile_name)
@@ -546,6 +568,9 @@ def parse_args():
                       action='store_false', help='do not add a message')
     parser.add_option('-m', '--message', '--cover-letter', dest='message',
                       action='store_true', help='add a message')
+    parser.add_option('--no-cover-info', dest='cover_info',
+                      action='store_false', default=True,
+                      help='do not append comments information when editing the cover letter')
     parser.add_option('--no-binary', dest='binary',
                       action='store_false', default=True,
                       help='Do not output contents of changes in binary files, instead display a notice that those files changed')
@@ -745,9 +770,15 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
             keyid_var = git_get_config('git-publish', 'signingkey')
 
     invoke_hook('pre-publish-tag', base)
+
+    cl_info = ['']
+    if options.cover_info:
+        cl_info += git_cover_letter_info(base, topic, to, cc, options.in_reply_to, number)
+
     # Tag the tree
     if options.pull_request:
         tag_message = get_latest_tag_message(topic, ['Pull request'])
+        tag_message += cl_info
         tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=sign_pull, keyid=keyid)
         git_push(remote, tag_name_pull_request(topic), force=True)
     else:
@@ -755,6 +786,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
             '*** SUBJECT HERE ***',
             '',
             blurb_template])
+        tag_message += cl_info
         anno = options.edit or message
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
