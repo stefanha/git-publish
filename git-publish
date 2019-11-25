@@ -129,7 +129,7 @@ def git_get_var(name):
     return None
 
 def git_get_current_branch():
-    git_dir = os.path.join(git_get_toplevel_dir(), '.git')
+    git_dir = git_get_git_dir()
     rebase_dir = os.path.join(git_dir, 'rebase-merge')
     if os.path.exists(rebase_dir):
         branch_path = os.path.join(rebase_dir, 'head-name')
