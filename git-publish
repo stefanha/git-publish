@@ -307,7 +307,7 @@ def git_cover_letter_info(base, topic, to, cc, in_reply_to, number):
     cl_info += ['']
 
     cl_info += ['Version number: ' + str(number)]
-    cl_info += ['Braches:']
+    cl_info += ['Branches:']
     cl_info += ['         base:  ' + base, '         topic: ' + topic]
     cl_info += ['']
 
