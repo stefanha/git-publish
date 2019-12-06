@@ -184,15 +184,15 @@ def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
 
 def git_tag(name, annotate=None, force=False, sign=False, keyid=None):
-    args = ['tag', '-a']
+    args = ['tag', '--annotate']
     if annotate:
-        args += ['-F', annotate]
+        args += ['--file', annotate]
     else:
-        args += ['-m', '']
+        args += ['--message', '']
     if force:
-        args += ['-f']
+        args += ['--force']
     if sign:
-        args += ['-s']
+        args += ['--sign']
     if keyid:
         args += ['--local-user', keyid]
     args += [name]
