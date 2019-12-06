@@ -237,7 +237,7 @@ def git_send_email(to_list, cc_list, patches, suppress_cc, in_reply_to, dry_run=
     if in_reply_to:
         args += ['--in-reply-to', in_reply_to]
     if dry_run:
-        args += ['--dry-run']
+        args += ['--dry-run', '--relogin-delay=0']
     else:
         args += ['--quiet']
     args += ['--confirm=never']
