@@ -44,7 +44,7 @@ setup_path()
 # Create fake git repository for testing
 create_git_repo()
 {
-    git init -q
+    "$REAL_GIT" init -q
     cat > A <<EOF
     This is a test file
 
@@ -56,12 +56,12 @@ EOF
     Second test file
 EOF
 
-    git add A B
-    git commit -q -m 'Initial commit'
+    "$REAL_GIT" add A B
+    "$REAL_GIT" commit -q -m 'Initial commit'
 
     echo "Additional line" >> B
-    git add B
-    git commit -q -m 'Second commit'
+    "$REAL_GIT" add B
+    "$REAL_GIT" commit -q -m 'Second commit'
 }
 
 run_test_case()
@@ -90,8 +90,6 @@ mkdir "$RESULTS_DIR/home"
 export HOME="$RESULTS_DIR/home"
 
 SOURCE_DIR="$RESULTS_DIR/source"
-mkdir "$SOURCE_DIR"
-cd "$SOURCE_DIR"
 
 # set fake user name and email to make git happy if system values are not set
 cat >> "$RESULTS_DIR/home/.gitconfig" <<EOF
@@ -100,12 +98,17 @@ cat >> "$RESULTS_DIR/home/.gitconfig" <<EOF
 	name = git-publish tests
 EOF
 
-create_git_repo
-
 setup_path
 
 for t in "$TESTS_DIR"/[0-9]*;do
+    mkdir "$SOURCE_DIR"
+    cd "$SOURCE_DIR"
+    create_git_repo
+
     run_test_case "$t"
+
+    cd - >/dev/null
+    rm -rf "$SOURCE_DIR"
 done
 
 # Note that we'll delete the results dir only if all tests passed,
