@@ -1,0 +1,32 @@
+#!/bin/bash
+source "$TESTS_DIR/functions.sh"
+
+msgfile="$TEST_DIR/message"
+
+cat >"$msgfile" <<EOF
+This is the message
+
+This is the description.
+EOF
+
+# Copy out the cover letter before git-send-email(1) is invoked
+hookfile=".git/hooks/pre-publish-send-email"
+coverfile="$TEST_DIR/0000-cover-letter-patch"
+cat >"$hookfile" <<EOF
+#!/bin/bash
+cp "\$1/0000-cover-letter.patch" "$coverfile"
+exit 0
+EOF
+chmod 755 "$hookfile"
+
+git checkout -q -b mybranch
+
+GIT_EDITOR="cp $msgfile" git-publish --no-inspect-emails \
+  --to somebody@example.com \
+  -b HEAD^ \
+  --cover-letter \
+  --subject-prefix="a very long long long long long long long long long test" || :
+
+echo -ne 'Subject: [a very long long long long long long long long long test 0/1] This\r\n is the message\r\n' >"$TEST_DIR/expected"
+grep --after-context=1 '^Subject:' "$coverfile" >"$TEST_DIR/found"
+assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"

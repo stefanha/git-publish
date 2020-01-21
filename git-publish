@@ -13,6 +13,8 @@
 
 from __future__ import print_function, unicode_literals
 from io import open
+import email
+import email.policy
 import os
 import glob
 import sys
@@ -847,11 +849,18 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                              extra_args=args)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
-                lines = open(cover_letter_path).readlines()
-                lines = [s.replace('*** SUBJECT HERE ***', message[0]) for s in lines]
+                msg = email.message_from_binary_file(open(cover_letter_path, 'rb'),
+                                                     policy=email.policy.SMTP)
+
+                subject = msg['Subject'].replace('\n', '')
+                subject = subject.replace('*** SUBJECT HERE ***', message[0])
+                msg.replace_header('Subject', subject)
+
                 blurb = os.linesep.join(message[2:])
-                lines = [s.replace('*** BLURB HERE ***', blurb) for s in lines]
-                open(cover_letter_path, 'w').writelines(lines)
+                body = msg.get_content().replace('*** BLURB HERE ***', blurb)
+                msg.set_content(body)
+
+                open(cover_letter_path, 'wb').write(msg.as_bytes())
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
             if options.annotate:
                 edit(*patches)
