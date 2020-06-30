@@ -618,6 +618,8 @@ def parse_args():
                       help='specify the In-Reply-To: of the cover letter (or the single patch)')
     parser.add_option('--add-header', '-H', action='append', dest='headers',
                       help='specify custom headers to git-send-email')
+    parser.add_option('--separate-send', '-S', dest='separate_send', action='store_true',
+                      default=False, help='Send patches using separate git-send-email cmd')
 
     return parser.parse_args()
 
@@ -890,7 +892,11 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                     print('Deleted files: %s' % ' '.join(deleted))
                 return 1
 
-            git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to)
+            if (options.separate_send):
+                for patch in selected_patches:
+                    git_send_email(to, cc, [patch], suppress_cc, options.in_reply_to)
+            else:
+                git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         except GitError as e:
