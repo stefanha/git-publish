@@ -24,7 +24,6 @@ import tempfile
 import shutil
 import subprocess
 import locale
-from email import message_from_file, header
 
 VERSION = '1.6.1'
 
@@ -444,21 +443,6 @@ def menu_select(menu):
             continue
         return a
 
-def parse_header(hdr):
-    r = ''
-    for h, c in header.decode_header(hdr):
-        if c is None:
-            c = 'us-ascii'
-
-        if sys.version_info > (3, 0) and type(h) is str:
-            r += h
-        else:
-            r += h.decode(c)
-
-    if '\n' in r:
-        r = " ".join([x.strip() for x in r.splitlines()])
-    return r
-
 def edit_email_list(cc_list):
     tmpfile = tempfile.NamedTemporaryFile(mode='wb', suffix='.txt')
     tmpfile.write(os.linesep.join(cc_list).encode(ENCODING))
@@ -485,8 +469,9 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
                                 in_reply_to, dry_run=True)
         index = 0
         for f in patches:
-            m = message_from_file(open(f))
-            print(parse_header(m['subject']))
+            m = email.message_from_binary_file(open(f, 'rb'),
+                                               policy=email.policy.SMTP)
+            print(m['Subject'].strip())
             # Print relevant 'Adding cc' lines from the git-send-email --dry-run output
             while index < len(output) and len(output[index]):
                 if output[index].find('Adding cc') != -1:
