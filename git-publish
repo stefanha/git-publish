@@ -474,8 +474,9 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
             print(m['Subject'].strip())
             # Print relevant 'Adding cc' lines from the git-send-email --dry-run output
             while index < len(output) and len(output[index]):
-                if output[index].find('Adding cc') != -1:
-                    print('  ' + output[index])
+                line = output[index].replace('\r', '')
+                if line.find('Adding cc') != -1:
+                    print('  ' + line)
                 index += 1
             index += 1
         print()
