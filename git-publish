@@ -55,8 +55,8 @@ def to_text(data):
 def popen_lines(cmd, **kwargs):
     '''Communicate with a Popen object and return a list of lines for stdout and stderr'''
     stdout, stderr = cmd.communicate(**kwargs)
-    stdout = stdout.decode(ENCODING).split(os.linesep)[:-1]
-    stderr = stderr.decode(ENCODING).split(os.linesep)[:-1]
+    stdout = re.split('\r\n|\n',stdout.decode(ENCODING))[:-1]
+    stderr = re.split('\r\n|\n',stderr.decode(ENCODING))[:-1]
     return stdout, stderr
 
 def _git_check(*args):
