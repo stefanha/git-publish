@@ -1,0 +1,13 @@
+name: Continuous Integration
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Ubuntu Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install git-email
+        run: sudo apt-get install -qy git-email
+      - name: Run the test suite
+        run: testing/run_tests.sh
