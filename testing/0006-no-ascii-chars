@@ -1,0 +1,52 @@
+#!/bin/bash
+source "$TESTS_DIR/functions.sh"
+
+msgfile="$TEST_DIR/message"
+
+cat >"$msgfile" <<EOF
+This is the message with non-ascii characters (ąǫ)
+
+This is the description with non-ascii characters (èé).
+EOF
+
+# Copy out the cover letter before git-send-email(1) is invoked
+hookfile=".git/hooks/pre-publish-send-email"
+coverfile="$TEST_DIR/0000-cover-letter-patch"
+cat >"$hookfile" <<EOF
+#!/bin/bash
+cp "\$1/0000-cover-letter.patch" "$coverfile"
+exit 0
+EOF
+chmod 755 "$hookfile"
+
+git checkout -q -b mybranch
+
+touch foo.txt
+git add foo.txt
+git commit --author "Author with non-ascii characters (ẽã) <author@example.com>" \
+  -m "Commit with non-ascii characters (ąǫ)"
+
+GIT_EDITOR="cp $msgfile" git-publish --no-inspect-emails \
+  --to somebody@example.com \
+  -b HEAD^ \
+  --cover-letter \
+  --subject-prefix="PATCH ò" || :
+
+echo -ne \
+    'Subject: [PATCH =?utf-8?q?=C3=B2_0/1=5D_This_is_the_message_with_non-ascii_characters_=28=C4=85=C7=AB=29?=\r\n' \
+    >"$TEST_DIR/expected"
+grep '^Subject:' "$coverfile" >"$TEST_DIR/found"
+assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
+
+echo -ne \
+    'This is the description with non-ascii characters (èé).\r\n' \
+    >"$TEST_DIR/expected"
+grep '^This is the description' "$coverfile" >"$TEST_DIR/found"
+assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
+
+echo -ne \
+    'Author with non-ascii characters (ẽã) (1):\r\n' \
+    ' Commit with non-ascii characters (ąǫ)\r\n' \
+    >"$TEST_DIR/expected"
+grep --after-context=1 '^Author with non-ascii characters' "$coverfile" >"$TEST_DIR/found"
+assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
