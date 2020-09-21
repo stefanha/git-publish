@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: "actions/setup-python@v2"
+        with:
+          python-version: "3.8"
       - name: Install git-email
         run: sudo apt-get install -qy git-email
       - name: Run the test suite
