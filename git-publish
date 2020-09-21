@@ -846,7 +846,11 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
 
                 blurb = os.linesep.join(message[2:])
                 body = msg.get_content().replace('*** BLURB HERE ***', blurb)
-                msg.set_content(body)
+
+                # git-format-patch(1) generates the cover letter with
+                # UTF-8 charset and Content-Transfer-Encoding=8bit.
+                # git-send-email(1) expects the same, so let's behave similarly.
+                msg.set_content(body, charset='utf-8', cte='8bit')
 
                 open(cover_letter_path, 'wb').write(msg.as_bytes())
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
