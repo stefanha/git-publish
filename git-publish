@@ -837,8 +837,13 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
                              extra_args=args)
             if message:
                 cover_letter_path = os.path.join(tmpdir, '0000-cover-letter.patch')
+
+                # email.policy.HTTP is like SMTP except that max_line_length
+                # is set to None (unlimited).
+                # This works better with git-send-email(1), avoiding issues
+                # with the subject (https://github.com/stefanha/git-publish/issues/96)
                 msg = email.message_from_binary_file(open(cover_letter_path, 'rb'),
-                                                     policy=email.policy.SMTP)
+                                                     policy=email.policy.HTTP)
 
                 subject = msg['Subject'].replace('\n', '')
                 subject = subject.replace('*** SUBJECT HERE ***', message[0])
