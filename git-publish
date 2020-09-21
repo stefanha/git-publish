@@ -846,7 +846,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % 
 
                 blurb = os.linesep.join(message[2:])
                 body = msg.get_content().replace('*** BLURB HERE ***', blurb)
-                msg.set_payload(body)
+                msg.set_content(body)
 
                 open(cover_letter_path, 'wb').write(msg.as_bytes())
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
