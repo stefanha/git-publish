@@ -515,7 +515,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
             listfile.flush()
             edit(listfile.name)
             listfile.seek(0)
-            patches = [x for x in listfile.read().splitlines() if len(x.strip())]
+            patches = [x for x in listfile.read().decode(ENCODING).splitlines() if len(x.strip())]
         elif a == 'p':
             print('\n'.join(output))
         elif a == 'a':
