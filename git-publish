@@ -721,7 +721,7 @@ gitpublishprofile.%s.remote''' % (topic, topic, options.profile_name))
         if check_url and not any(url.startswith(scheme) for scheme in ('git://', 'http://', 'https://')):
             print('''Possible private URL "%s", normally pull requests reference publicly
 accessible git://, http://, or https:// URLs.  Are you sure
-branch.%s.pushRemote is set appropriately?  (Override with --no-url-check)''' % (url, topic))
+branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % (url, topic))
             return 1
 
         sign_pull = options.sign_pull
