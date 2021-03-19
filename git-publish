@@ -629,6 +629,12 @@ def main():
         setup()
         return 0
 
+    try:
+        git_get_toplevel_dir()
+    except GitError:
+        print('Unable to find git directory, are you sure you are in a git repo?')
+        return 1
+
     if not check_profile_exists(options.profile_name):
         if options.profile_name == 'default':
             if has_profiles():
