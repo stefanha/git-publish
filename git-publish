@@ -864,7 +864,12 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 # git-send-email(1) expects the same, so let's behave similarly.
                 msg.set_content(body, charset='utf-8', cte='8bit')
 
-                open(cover_letter_path, 'wb').write(msg.as_bytes())
+                # Without this, by default the policy seems to be '\r\n' always
+                # for linesep, even on Unix-like systems.  Make it explicitly
+                # to use local linesep, so it'll work right for '\n' OSs like
+                # Linux.
+                policy = msg.policy.clone(linesep=os.linesep)
+                open(cover_letter_path, 'wb').write(msg.as_bytes(policy=policy))
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
             if options.annotate:
                 edit(*patches)
