@@ -28,6 +28,7 @@ import locale
 VERSION = '1.7.0'
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
+git_email_policy = email.policy.default.clone(max_line_length=0, linesep='\n')
 
 ENCODING = locale.getpreferredencoding()
 
@@ -470,8 +471,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
                                 in_reply_to, dry_run=True)
         index = 0
         for f in patches:
-            m = email.message_from_binary_file(open(f, 'rb'),
-                                               policy=email.policy.SMTP)
+            m = email.message_from_binary_file(open(f, 'rb'), policy=git_email_policy)
             print(m['Subject'].strip())
             # Print relevant 'Adding cc' lines from the git-send-email --dry-run output
             while index < len(output) and len(output[index]):
@@ -850,7 +850,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 # This works better with git-send-email(1), avoiding issues
                 # with the subject (https://github.com/stefanha/git-publish/issues/96)
                 msg = email.message_from_binary_file(open(cover_letter_path, 'rb'),
-                                                     policy=email.policy.HTTP)
+                                                     policy=git_email_policy)
 
                 subject = msg['Subject'].replace('\n', '')
                 subject = subject.replace('*** SUBJECT HERE ***', message[0])
@@ -864,7 +864,8 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 # git-send-email(1) expects the same, so let's behave similarly.
                 msg.set_content(body, charset='utf-8', cte='8bit')
 
-                open(cover_letter_path, 'wb').write(msg.as_bytes())
+                open(cover_letter_path, 'wb').write(msg.as_bytes(unixfrom=True,
+                                                                 policy=git_email_policy))
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
             if options.annotate:
                 edit(*patches)

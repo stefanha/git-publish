@@ -28,7 +28,7 @@ GIT_EDITOR="cp $msgfile" git-publish --no-inspect-emails \
   --subject-prefix="PATCH" || :
 
 echo -ne \
-    'Subject: [PATCH 0/1] 123456789 123456789 123456789 123456789 123456789 123456789\r\n' \
+    'Subject: [PATCH 0/1] 123456789 123456789 123456789 123456789 123456789 123456789\n' \
     >"$TEST_DIR/expected"
 grep '^Subject:' "$coverfile" >"$TEST_DIR/found"
 assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"

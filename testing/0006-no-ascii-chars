@@ -33,20 +33,20 @@ GIT_EDITOR="cp $msgfile" git-publish --no-inspect-emails \
   --subject-prefix="PATCH ò" || :
 
 echo -ne \
-    'Subject: [PATCH =?utf-8?q?=C3=B2_0/1=5D_This_is_the_message_with_non-ascii_characters_=28=C4=85=C7=AB=29?=\r\n' \
+    'Subject: [PATCH =?utf-8?q?=C3=B2_0/1=5D_This_is_the_message_with_non-ascii_characters_=28=C4=85=C7=AB=29?=\n' \
     >"$TEST_DIR/expected"
 grep '^Subject:' "$coverfile" >"$TEST_DIR/found"
 assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
 
 echo -ne \
-    'This is the description with non-ascii characters (èé).\r\n' \
+    'This is the description with non-ascii characters (èé).\n' \
     >"$TEST_DIR/expected"
 grep '^This is the description' "$coverfile" >"$TEST_DIR/found"
 assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
 
 echo -ne \
-    'Author with non-ascii characters (ẽã) (1):\r\n' \
-    ' Commit with non-ascii characters (ąǫ)\r\n' \
+    'Author with non-ascii characters (ẽã) (1):\n' \
+    ' Commit with non-ascii characters (ąǫ)\n' \
     >"$TEST_DIR/expected"
 grep --after-context=1 '^Author with non-ascii characters' "$coverfile" >"$TEST_DIR/found"
 assert diff -u "$TEST_DIR/expected" "$TEST_DIR/found"
