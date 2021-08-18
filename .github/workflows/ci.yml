@@ -11,8 +11,6 @@ jobs:
         with:
           python-version: "3.8"
       - name: Install git-email
-        run: ls -alF /etc/apt/sources.list.d && cat /etc/apt/sources.list.d/*
-      - name: Install git-email
-        run: sudo apt-get install -qy git-email
+        run: sudo add-apt-repository ppa:git-core/ppa && sudo apt-get update && sudo apt-get install -qy git-email
       - name: Run the test suite
         run: testing/run_tests.sh
