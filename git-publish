@@ -420,6 +420,23 @@ def edit(*filenames):
     cmd.extend(filenames)
     subprocess.call(cmd)
 
+def edit_content(content, suffix):
+    fd, tmpfile = None, None
+
+    try:
+        fd, tmpfile = tempfile.mkstemp(suffix=suffix)
+        fd_opened = os.fdopen(fd, 'wb')
+        fd_opened.write(content)
+        fd_opened.close()
+        edit(tmpfile)
+        fd_opened = open(tmpfile, "rb")
+        new_content = fd_opened.read()
+        fd_opened.close()
+        return new_content
+    finally:
+        if tmpfile:
+            os.unlink(tmpfile)
+
 def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
     '''Edit a tag message and create the tag'''
     fd, tmpfile = None, None
@@ -446,12 +463,10 @@ def menu_select(menu):
         return a
 
 def edit_email_list(cc_list):
-    tmpfile = tempfile.NamedTemporaryFile(mode='wb', suffix='.txt')
-    tmpfile.write(os.linesep.join(cc_list).encode(ENCODING))
-    tmpfile.flush()
-    edit(tmpfile.name)
+    new_content_bytes = edit_content(os.linesep.join(cc_list).encode(ENCODING), '.txt')
+    new_content = new_content_bytes.decode(ENCODING)
     r = []
-    for line in open(tmpfile.name, "r").readlines():
+    for line in new_content.splitlines():
         r += [x.strip() for x in line.split(",")]
     return r
 
@@ -511,12 +526,9 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
         elif a == 'e':
             edit(*patches)
         elif a == 's':
-            listfile = tempfile.NamedTemporaryFile()
-            listfile.write("\n".join(patches).encode(ENCODING))
-            listfile.flush()
-            edit(listfile.name)
-            listfile.seek(0)
-            patches = [x for x in listfile.read().decode(ENCODING).splitlines() if len(x.strip())]
+            new_content_bytes = edit_content(os.linesep.join(patches).encode(ENCODING), '.txt')
+            new_content = new_content_bytes.decode(ENCODING)
+            patches = [x for x in new_content.splitlines() if len(x.strip())]
         elif a == 'p':
             print('\n'.join(output))
         elif a == 'a':
