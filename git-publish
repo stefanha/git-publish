@@ -17,6 +17,7 @@ import email
 import email.policy
 import os
 import glob
+import shlex
 import sys
 import optparse
 import re
@@ -30,7 +31,16 @@ VERSION = '1.7.0'
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
 git_email_policy = email.policy.default.clone(max_line_length=0, linesep='\n')
 
-ENCODING = locale.getpreferredencoding()
+# Encoding for command-line arguments
+CMDLINE_ENCODING = locale.getpreferredencoding()
+
+# Encoding for communicating with the Git executable
+GIT_ENCODING = 'utf-8'
+
+# Encoding for files that GIT_EDITOR can edit
+TEXTFILE_ENCODING = CMDLINE_ENCODING
+if os.name == 'nt':
+    TEXTFILE_ENCODING = 'utf-8-sig' # plain utf-8 isn't supported by Notepad.exe
 
 # As a git alias it is helpful to be a single file script with no external
 # dependencies, so these git command-line wrappers are used instead of
@@ -50,14 +60,14 @@ class InspectEmailsError(Exception):
 
 def to_text(data):
     if isinstance(data, bytes):
-        return data.decode(ENCODING)
+        return data.decode(CMDLINE_ENCODING)
     return data
 
 def popen_lines(cmd, **kwargs):
     '''Communicate with a Popen object and return a list of lines for stdout and stderr'''
     stdout, stderr = cmd.communicate(**kwargs)
-    stdout = re.split('\r\n|\n',stdout.decode(ENCODING))[:-1]
-    stderr = re.split('\r\n|\n',stderr.decode(ENCODING))[:-1]
+    stdout = re.split('\r\n|\n',stdout.decode(GIT_ENCODING))[:-1]
+    stderr = re.split('\r\n|\n',stderr.decode(GIT_ENCODING))[:-1]
     return stdout, stderr
 
 def _git_check(*args):
@@ -88,7 +98,8 @@ def _git_with_stderr(*args):
     cmd = subprocess.Popen(['git'] + list(args),
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
-    return popen_lines(cmd)
+    stdout, stderr = popen_lines(cmd)
+    return stdout, stderr, cmd.returncode
 
 def bool_from_str(s):
     '''Parse a boolean string value like true/false, yes/no, or on/off'''
@@ -136,7 +147,8 @@ def git_get_current_branch():
     if os.path.exists(rebase_dir):
         branch_path = os.path.join(rebase_dir, 'head-name')
         prefix = 'refs/heads/'
-        branch = open(branch_path).read().strip()
+        # Path names are encoded in UTF-8 normalization form C.
+        branch = open(branch_path, encoding=GIT_ENCODING).read().strip()
         if branch.startswith(prefix):
             return branch[len(prefix):]
         return branch
@@ -246,9 +258,12 @@ def git_send_email(to_list, cc_list, patches, suppress_cc, in_reply_to, dry_run=
     args += ['--confirm=never']
     args += patches
     if dry_run:
-            return _git_with_stderr(*args[1:])[0]
+        return _git_with_stderr(*args[1:])[0]
     else:
-        if subprocess.call(args) != 0:
+        stdout, stderr, ret_code = _git_with_stderr(*args[1:])
+        print('\n'.join(stdout))
+        print('\n'.join(stderr))
+        if ret_code != 0:
             raise GitSendEmailError
 
 GIT_HOOKDIR = None
@@ -302,7 +317,7 @@ def git_config_with_profile(*args):
     path = %s
 ''' % (gitpublish,  gitconfig)
 
-    stdout, _ = popen_lines(cmd, input=git_config_file.encode(ENCODING))
+    stdout, _ = popen_lines(cmd, input=git_config_file.encode(GIT_ENCODING))
     return stdout
 
 def git_cover_letter_info(base, topic, to, cc, in_reply_to, number):
@@ -426,13 +441,13 @@ def edit_content(content, suffix):
     try:
         fd, tmpfile = tempfile.mkstemp(suffix=suffix)
         fd_opened = os.fdopen(fd, 'wb')
-        fd_opened.write(content)
+        fd_opened.write(content.encode(TEXTFILE_ENCODING))
         fd_opened.close()
         edit(tmpfile)
         fd_opened = open(tmpfile, "rb")
         new_content = fd_opened.read()
         fd_opened.close()
-        return new_content
+        return new_content.decode(TEXTFILE_ENCODING)
     finally:
         if tmpfile:
             os.unlink(tmpfile)
@@ -443,9 +458,11 @@ def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
 
     try:
         if annotate:
-            fd, tmpfile = tempfile.mkstemp(text=True)
-            os.fdopen(fd, 'wb').write(os.linesep.join(template + ['']).encode(ENCODING))
-            edit(tmpfile)
+            new_content = edit_content(os.linesep.join(template + ['']), '.txt')
+            fd, tmpfile = tempfile.mkstemp()
+            fd_opened = os.fdopen(fd, 'wb')
+            fd_opened.write(new_content.encode(GIT_ENCODING))
+            fd_opened.close()
 
         git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
     finally:
@@ -463,8 +480,7 @@ def menu_select(menu):
         return a
 
 def edit_email_list(cc_list):
-    new_content_bytes = edit_content(os.linesep.join(cc_list).encode(ENCODING), '.txt')
-    new_content = new_content_bytes.decode(ENCODING)
+    new_content = edit_content(os.linesep.join(cc_list), '.txt')
     r = []
     for line in new_content.splitlines():
         # Remove blank email item in list by len(x.strip())
@@ -527,8 +543,7 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
         elif a == 'e':
             edit(*patches)
         elif a == 's':
-            new_content_bytes = edit_content(os.linesep.join(patches).encode(ENCODING), '.txt')
-            new_content = new_content_bytes.decode(ENCODING)
+            new_content = edit_content(os.linesep.join(patches), '.txt')
             patches = [x for x in new_content.splitlines() if len(x.strip())]
         elif a == 'p':
             print('\n'.join(output))
@@ -884,9 +899,15 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 edit(*patches)
             if cc_cmd:
                 for x in patches:
-                    output = subprocess.check_output(cc_cmd + " " + x,
-                                shell=True, cwd=git_get_toplevel_dir()).decode(ENCODING)
-                    cc = cc.union(output.splitlines())
+                    # The encoding of cc-cmd output is not well-defined. Use git's encoding for now
+                    # although git-send-email is a Perl script that uses Perl's Unicode support rather
+                    # than git's standard UTF-8 encoding.
+                    cmd = subprocess.Popen(shlex.split(cc_cmd + " " + x),
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
+                           cwd=git_get_toplevel_dir())
+                    output, _ = popen_lines(cmd)
+                    cc = cc.union(output)
             cc.difference_update(to)
             if inspect_emails:
                 selected_patches = inspect_menu(tmpdir, to, cc, patches, suppress_cc,
