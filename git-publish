@@ -467,7 +467,8 @@ def edit_email_list(cc_list):
     new_content = new_content_bytes.decode(ENCODING)
     r = []
     for line in new_content.splitlines():
-        r += [x.strip() for x in line.split(",")]
+        # Remove blank email item in list by len(x.strip())
+        r += [x.strip() for x in line.split(",") if len(x.strip())]
     return r
 
 def git_save_email_lists(topic, to, cc, override_cc):
