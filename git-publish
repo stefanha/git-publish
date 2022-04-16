@@ -3,7 +3,7 @@
 # git-publish - Prepare and store patch revisions as git tags
 #
 # Copyright 2011 IBM, Corp.
-# Copyright 2014-2019 Red Hat, Inc.
+# Copyright Red Hat
 #
 # Authors:
 #   Stefan Hajnoczi <stefanha@gmail.com>
