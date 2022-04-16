@@ -26,7 +26,7 @@ import shutil
 import subprocess
 import locale
 
-VERSION = '1.7.0'
+VERSION = '1.8.0'
 
 tag_version_re = re.compile(r'^[a-zA-Z0-9_/\-\.]+-v(\d+)$')
 git_email_policy = email.policy.default.clone(max_line_length=0, linesep='\n')
