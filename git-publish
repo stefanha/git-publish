@@ -902,12 +902,9 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                     # The encoding of cc-cmd output is not well-defined. Use git's encoding for now
                     # although git-send-email is a Perl script that uses Perl's Unicode support rather
                     # than git's standard UTF-8 encoding.
-                    cmd = subprocess.Popen(shlex.split(cc_cmd + " " + x),
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           cwd=git_get_toplevel_dir())
-                    output, _ = popen_lines(cmd)
-                    cc = cc.union(output)
+                    output = subprocess.check_output(cc_cmd + " " + x,
+                               shell=True, cwd=git_get_toplevel_dir()).decode(GIT_ENCODING)
+                    cc = cc.union(output.splitlines())
             cc.difference_update(to)
             if inspect_emails:
                 selected_patches = inspect_menu(tmpdir, to, cc, patches, suppress_cc,
