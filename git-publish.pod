@@ -194,7 +194,19 @@ Ignore any profile or saved Cc: email addresses.
 
 =item B<--in-reply-to=IN_REPLY_TO>
 
-Specify the In-Reply-To: of the cover letter (or the single patch).
+Specify the In-Reply-To: of the first email, or of all emails if --no-thread is
+given or is otherwise the default.
+
+=item B<--no-thread>
+
+Do not add In-Reply-To: and References: headers to any email.  This may be the
+default depending on your L<git-send-email(1)> configuration.
+
+=item B<--thread>
+
+Add In-Reply-To: and References: headers to sent emails.  This may be the
+default depending on your L<git-send-email(1)> configuration, which also
+controls whether each email refers to the previous email or to the first email.
 
 =back
 
