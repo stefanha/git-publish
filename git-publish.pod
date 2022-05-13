@@ -63,6 +63,11 @@ Do not check whether the pull request URL is publicly accessible.
 
 Check whether the pull request URL is publicly accessible.  This is the default.
 
+=item B<--skip=N>
+
+Unselect the first N patch emails (including the cover letter if any).  If
+negative, select only the last -N patches.
+
 =item B<--edit>
 
 Edit message but do not tag a new version.  Use this to draft the cover letter before actually tagging a new version.

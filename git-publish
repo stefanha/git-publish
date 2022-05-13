@@ -571,6 +571,8 @@ def parse_args():
                       help='skip publicly accessible pull request URL check')
     parser.add_option('--check-url', dest='check_url', action='store_true',
                       help='check pull request URLs are publicly accessible')
+    parser.add_option('--skip', type='int', dest='skip', metavar='N', default=0,
+                      help='unselect the first N patch emails (including the cover letter if any)')
     parser.add_option('--edit', dest='edit', action='store_true',
                       default=False, help='edit message but do not tag a new version')
     parser.add_option('--no-inspect-emails', dest='inspect_emails',
@@ -895,6 +897,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 open(cover_letter_path, 'wb').write(msg.as_bytes(unixfrom=True,
                                                                  policy=git_email_policy))
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
+            del patches[:options.skip]
             if options.annotate:
                 edit(*patches)
             if cc_cmd:
@@ -916,6 +919,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
             invoke_hook('pre-publish-send-email', tmpdir)
 
             final_patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
+            del final_patches[:options.skip]
             if final_patches != patches:
                 added = set(final_patches).difference(set(patches))
                 deleted = set(patches).difference(set(final_patches))
