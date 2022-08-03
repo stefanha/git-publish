@@ -506,7 +506,8 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
         index = 0
         for f in patches:
             m = email.message_from_binary_file(open(f, 'rb'), policy=git_email_policy)
-            print(m['Subject'].strip())
+            if 'Subject' in m:
+                print(m['Subject'].strip())
             # Print relevant 'Adding cc' lines from the git-send-email --dry-run output
             while index < len(output) and len(output[index]):
                 line = output[index].replace('\r', '')
