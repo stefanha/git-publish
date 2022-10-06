@@ -437,10 +437,8 @@ def edit(*filenames):
     subprocess.call(cmd)
 
 def edit_content(content, suffix):
-    fd, tmpfile = None, None
-
+    fd, tmpfile = tempfile.mkstemp(suffix=suffix)
     try:
-        fd, tmpfile = tempfile.mkstemp(suffix=suffix)
         with os.fdopen(fd, 'wb') as f:
             f.write(content.encode(TEXTFILE_ENCODING))
         edit(tmpfile)
@@ -448,8 +446,7 @@ def edit_content(content, suffix):
             new_content = f.read()
         return new_content.decode(TEXTFILE_ENCODING)
     finally:
-        if tmpfile:
-            os.unlink(tmpfile)
+        os.unlink(tmpfile)
 
 def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
     '''Edit a tag message and create the tag'''
