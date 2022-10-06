@@ -441,9 +441,8 @@ def edit_content(content, suffix):
 
     try:
         fd, tmpfile = tempfile.mkstemp(suffix=suffix)
-        fd_opened = os.fdopen(fd, 'wb')
-        fd_opened.write(content.encode(TEXTFILE_ENCODING))
-        fd_opened.close()
+        with os.fdopen(fd, 'wb') as f:
+            f.write(content.encode(TEXTFILE_ENCODING))
         edit(tmpfile)
         with open(tmpfile, "rb") as f:
             new_content = f.read()
@@ -460,9 +459,8 @@ def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
         if annotate:
             new_content = edit_content(os.linesep.join(template + ['']), '.txt')
             fd, tmpfile = tempfile.mkstemp()
-            fd_opened = os.fdopen(fd, 'wb')
-            fd_opened.write(new_content.encode(GIT_ENCODING))
-            fd_opened.close()
+            with os.fdopen(fd, 'wb') as f:
+                f.write(new_content.encode(GIT_ENCODING))
 
         git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
     finally:
