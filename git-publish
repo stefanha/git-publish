@@ -500,8 +500,9 @@ def inspect_menu(tmpdir, to_list, cc_list, patches, suppress_cc, in_reply_to,
         output = git_send_email(to_list, cc_list, patches, suppress_cc,
                                 in_reply_to, thread, dry_run=True)
         index = 0
-        for f in patches:
-            m = email.message_from_binary_file(open(f, 'rb'), policy=git_email_policy)
+        for patch in patches:
+            with open(patch, 'rb') as f:
+                m = email.message_from_binary_file(f, policy=git_email_policy)
             if 'Subject' in m:
                 print(m['Subject'].strip())
             # Print relevant 'Adding cc' lines from the git-send-email --dry-run output
@@ -882,8 +883,8 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 # is set to None (unlimited).
                 # This works better with git-send-email(1), avoiding issues
                 # with the subject (https://github.com/stefanha/git-publish/issues/96)
-                msg = email.message_from_binary_file(open(cover_letter_path, 'rb'),
-                                                     policy=git_email_policy)
+                with open(cover_letter_path, 'rb') as f:
+                    msg = email.message_from_binary_file(f, policy=git_email_policy)
 
                 subject = msg['Subject'].replace('\n', '')
                 subject = subject.replace('*** SUBJECT HERE ***', message[0])
@@ -897,8 +898,9 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 # git-send-email(1) expects the same, so let's behave similarly.
                 msg.set_content(body, charset='utf-8', cte='8bit')
 
-                open(cover_letter_path, 'wb').write(msg.as_bytes(unixfrom=True,
-                                                                 policy=git_email_policy))
+                with open(cover_letter_path, 'wb') as f:
+                    f.write(msg.as_bytes(unixfrom=True, policy=git_email_policy))
+
             patches = sorted(glob.glob(os.path.join(tmpdir, '*')))
             del patches[:options.skip]
             if options.annotate:
