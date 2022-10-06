@@ -146,7 +146,8 @@ def git_get_current_branch():
         branch_path = os.path.join(rebase_dir, 'head-name')
         prefix = 'refs/heads/'
         # Path names are encoded in UTF-8 normalization form C.
-        branch = open(branch_path, encoding=GIT_ENCODING).read().strip()
+        with open(branch_path, encoding=GIT_ENCODING) as f:
+            branch = f.read().strip()
         if branch.startswith(prefix):
             return branch[len(prefix):]
         return branch
@@ -444,9 +445,8 @@ def edit_content(content, suffix):
         fd_opened.write(content.encode(TEXTFILE_ENCODING))
         fd_opened.close()
         edit(tmpfile)
-        fd_opened = open(tmpfile, "rb")
-        new_content = fd_opened.read()
-        fd_opened.close()
+        with open(tmpfile, "rb") as f:
+            new_content = f.read()
         return new_content.decode(TEXTFILE_ENCODING)
     finally:
         if tmpfile:
