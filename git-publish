@@ -15,7 +15,6 @@ import email
 import email.policy
 import os
 import glob
-import shlex
 import sys
 import optparse
 import re
