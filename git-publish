@@ -962,6 +962,12 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
                 git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to, options.thread,
                                send_email_args=options.send_email_args,
                                dry_run=options.dry_run)
+
+            if options.dry_run:
+                npatches = len(selected_patches)
+                npeople = len(to) + len(cc)
+                print(f"Would have sent of {npatches} patches to {npeople} people")
+
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         except GitError as e:
