@@ -652,6 +652,9 @@ def parse_args():
     parser.add_argument('--skip-final-edit', dest='skip_final_edit',
                         action='store_true', default=False,
                         help='Skip final edit step (useful for scripting)')
+    parser.add_argument('--dry-run', dest='dry_run',
+                        action='store_true', default=False,
+                        help='Do everything except tagging and sending the emails')
 
     return parser.parse_known_args()
 
@@ -822,7 +825,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
         cl_info += git_cover_letter_info(base, topic, to, cc, options.in_reply_to, number)
 
     # Tag the tree
-    if options.pull_request:
+    if options.pull_request and not options.dry_run:
         tag_message = get_latest_tag_message(topic, ['Pull request'])
         tag_message += cl_info
         tag(tag_name_pull_request(topic), tag_message, annotate=message, force=True, sign=sign_pull, keyid=keyid)
@@ -953,10 +956,12 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
             if (options.separate_send):
                 for patch in selected_patches:
                     git_send_email(to, cc, [patch], suppress_cc, options.in_reply_to, options.thread,
-                                   send_email_args=options.send_email_args)
+                                   send_email_args=options.send_email_args,
+                                   dry_run=options.dry_run)
             else:
                 git_send_email(to, cc, selected_patches, suppress_cc, options.in_reply_to, options.thread,
-                               send_email_args=options.send_email_args)
+                               send_email_args=options.send_email_args,
+                               dry_run=options.dry_run)
         except (GitSendEmailError, GitHookError, InspectEmailsError):
             return 1
         except GitError as e:
@@ -968,7 +973,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
 
         git_save_email_lists(topic, to, cc, options.override_cc)
 
-        if not options.pull_request:
+        if not options.pull_request and not options.dry_run:
             # Publishing is done, stablize the tag now
             _git_check('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
             git_delete_tag(tag_name_staging(topic))
