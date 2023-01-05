@@ -467,7 +467,7 @@ def tag(name, template, annotate=False, force=False, sign=False, keyid=None):
             with os.fdopen(fd, 'wb') as f:
                 f.write(new_content.encode(GIT_ENCODING))
 
-        git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
+            git_tag(name, annotate=tmpfile, force=force, sign=sign, keyid=keyid)
     finally:
         if tmpfile:
             os.unlink(tmpfile)
