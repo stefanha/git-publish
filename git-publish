@@ -649,6 +649,9 @@ def parse_args():
                       default=False, help='Send patches using separate git-send-email cmd')
     parser.add_argument('--send-email-args', action='append', default=[],
                       help="Arguments forwarded to git-send-email")
+    parser.add_argument('--skip-final-edit', dest='skip_final_edit',
+                        action='store_true', default=False,
+                        help='Skip final edit step (useful for scripting)')
 
     return parser.parse_known_args()
 
@@ -830,7 +833,7 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
             '',
             blurb_template])
         tag_message += cl_info
-        anno = options.edit or message
+        anno = (options.edit or message) and not options.skip_final_edit
         tag(tag_name_staging(topic), tag_message, annotate=anno, force=True)
 
     if options.clear_prefix:
