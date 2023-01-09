@@ -192,6 +192,14 @@ def git_get_remote_url(remote):
 def git_request_pull(base, remote, signed_tag):
     return _git_check('request-pull', base, remote, signed_tag)
 
+def git_branch_exists(branch):
+    '''Check if the given branch exists'''
+    try:
+        _git_check('rev-parse', '-q', '--verify', branch)
+        return True
+    except GitError:
+        return False
+
 def git_log(revlist):
     return _git('log', '--no-color', '--oneline', revlist)
 
@@ -690,6 +698,10 @@ def main():
         base = git_get_config('git-publish', 'base')
     if not base:
         base = 'master'
+
+    if not git_branch_exists(base):
+        print('Branch "%s" does not exist. Forgot to pass --base ?' % base)
+        return 1
 
     if topic == base:
         print('Please use a topic branch, cannot version the base branch (%s)' % base)
