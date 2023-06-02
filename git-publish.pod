@@ -208,6 +208,11 @@ Add In-Reply-To: and References: headers to sent emails.  This may be the
 default depending on your L<git-send-email(1)> configuration, which also
 controls whether each email refers to the previous email or to the first email.
 
+=item B<--send-email-args>
+
+List of arguments that are forwarded to the git-send-email call. You can add as
+many arguments as you need by using consecutive L<--send-email-args> arguments.
+
 =back
 
 =head1 DISCUSSION
@@ -419,6 +424,11 @@ One can attach notes to a commit with `git notes add <object>`. For having the
 notes "following" a commit on rebase operation, you can use
 `git config notes.rewriteRef refs/notes/commits`. For more information,
 give a look at L<git-notes(1)>.
+
+To have L<git-send-email> add a cc list to individual patch emails we use:
+
+  $ git-publish --cc patches@example.org --send-email-args="--cc-cmd" --send-email-args="SCRIPT"
+
 
 =head2 Creating profiles for frequently used projects
 
