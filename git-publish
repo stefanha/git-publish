@@ -966,8 +966,13 @@ branch.%s.pushRemote is set appropriately?  (Override with --no-check-url)''' % 
 
         if not options.pull_request:
             # Publishing is done, stablize the tag now
-            _git_check('tag', '-f', tag_name(topic, number), tag_name_staging(topic))
+            msg = git_get_tag_message(tag_name_staging(topic))
+            fd, tmpfile = tempfile.mkstemp()
+            with os.fdopen(fd, 'wb') as f:
+                f.write(os.linesep.join(msg + ['']).encode(TEXTFILE_ENCODING))
+            _git_check('tag', '-f', '-F', tmpfile, tag_name(topic, number), tag_name_staging(topic) + '^{}')
             git_delete_tag(tag_name_staging(topic))
+            os.unlink(tmpfile)
 
     return 0
 
